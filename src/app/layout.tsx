@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins, Geist_Mono, Chango, Jua } from "next/font/google";
 import "./globals.css";
 
@@ -24,6 +24,11 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "Taylor Houghtaling – Software Engineer & Co-Founder",
@@ -61,7 +66,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${poppins.variable} ${chango.variable} ${jua.variable} ${geistMono.variable} antialiased bg-black`}
+        className={`${poppins.variable} ${chango.variable} ${jua.variable} ${geistMono.variable} antialiased bg-black overflow-x-hidden`}
       >
         {children}
       </body>
