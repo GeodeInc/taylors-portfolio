@@ -18,7 +18,7 @@ export const GeodeBrand = () => {
       href="https://github.com/GeodeInc"
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed left-6 top-0 z-[5000] flex items-center"
+      className="fixed left-6 top-5 z-[5000] flex items-center"
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
     >
