@@ -38,7 +38,8 @@ export const GeodeBrand = () => {
       <motion.div
         className="overflow-hidden"
         initial={{ maxWidth: 0, opacity: 0, marginLeft: 0 }}
-        animate={{
+        className="hidden sm:block overflow-hidden"
+      animate={{
           maxWidth: showWordmark ? 200 : 0,
           opacity: showWordmark ? 1 : 0,
           marginLeft: showWordmark ? 10 : 0,
