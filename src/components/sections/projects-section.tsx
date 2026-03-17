@@ -1,6 +1,6 @@
 "use client";
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { BentoGrid, BentoGridItem } from "@/components/aceternity/bento-grid";
 import { IconBrandGithub, IconBuildingStore, IconBrain, IconCube } from "@tabler/icons-react";
 import { Magnetic } from "@/components/ui/magnetic";
@@ -25,8 +25,24 @@ const TenzorFullLogo = () => (
   </svg>
 );
 
-const POSHeader = () => (
-  <div className="relative flex h-32 w-full overflow-hidden rounded-xl bg-[#080d14]">
+const POSHeader = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [targetX, setTargetX] = useState(260);
+
+  useEffect(() => {
+    const update = () => {
+      if (!containerRef.current) return;
+      const width = containerRef.current.offsetWidth;
+      const cartLeftEdge = width - width * 0.28 - 32;
+      setTargetX(Math.max(60, cartLeftEdge - 40 - 10));
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return (
+  <div ref={containerRef} className="relative flex h-32 w-full overflow-hidden rounded-xl bg-[#080d14]">
     {/* Grid background */}
     <svg className="absolute inset-0 h-full w-full opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -66,7 +82,7 @@ const POSHeader = () => (
     <motion.div
       className="absolute w-[18px] h-[26px] rounded-[3px] overflow-hidden border"
       style={{ left: 40, top: "50%", marginTop: -13, borderColor: "rgba(74,96,128,0.9)", backgroundColor: "rgba(74,96,128,0.25)" }}
-      animate={{ x: [0,0,260,290], y: [0,-16,-16,-2], opacity: [1,1,0.85,0], scale: [1,1,0.88,0.4] }}
+      animate={{ x: [0,0,targetX,targetX+30], y: [0,-16,-16,-2], opacity: [1,1,0.85,0], scale: [1,1,0.88,0.4] }}
       transition={{ duration: 2.6, repeat: Infinity, repeatDelay: 0.9, ease: "easeInOut", times: [0,0.1,0.76,1] }}
     >
       <div className="h-[5px] w-full" style={{ backgroundColor: "#4a6080" }}/>
@@ -103,7 +119,8 @@ const POSHeader = () => (
       POS · CRM
     </div>
   </div>
-);
+  );
+};
 
 const SWATCHES = [
   ["#e63946","#e76f51","#f4a261"],
