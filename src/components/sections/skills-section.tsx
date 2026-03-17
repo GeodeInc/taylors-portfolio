@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { InfiniteMovingCards } from "@/components/aceternity/infinite-moving-cards";
 import {
   IconBrandReact, IconBrandNextjs, IconBrandTypescript, IconBrandNodejs,
-  IconBrandPython, IconBrandDocker, IconBrandGit, IconBrandAws,
+  IconBrandPython, IconBrandDocker, IconBrandGit,
   IconBrandTailwind, IconDatabase, IconBrandJavascript,
   IconBrandHtml5, IconBrandCss3, IconChartBar,
 } from "@tabler/icons-react";
@@ -25,7 +25,6 @@ const row2 = [
   { name: "Python",     icon: <IconBrandPython />,  color: "var(--navy)"      },
   { name: "PostgreSQL", icon: <IconDatabase />,     color: "var(--sage)"      },
   { name: "Docker",     icon: <IconBrandDocker />,  color: "var(--sage)"      },
-  { name: "AWS",        icon: <IconBrandAws />,     color: "var(--navy-dark)" },
   { name: "Git",        icon: <IconBrandGit />,     color: "var(--navy)"      },
 ];
 
