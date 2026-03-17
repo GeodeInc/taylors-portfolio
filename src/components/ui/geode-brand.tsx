@@ -36,9 +36,8 @@ export const GeodeBrand = () => {
 
       {/* Wordmark — clips and slides in/out */}
       <motion.div
-        className="overflow-hidden"
-        initial={{ maxWidth: 0, opacity: 0, marginLeft: 0 }}
         className="hidden sm:block overflow-hidden"
+        initial={{ maxWidth: 0, opacity: 0, marginLeft: 0 }}
       animate={{
           maxWidth: showWordmark ? 200 : 0,
           opacity: showWordmark ? 1 : 0,
