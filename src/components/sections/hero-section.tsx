@@ -96,14 +96,14 @@ export const HeroSection = () => {
   return (
     <section
       id="home"
-      className="relative flex min-h-screen w-full overflow-hidden"
+      className="relative w-full overflow-hidden"
     >
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-hidden="true" />
 
       {/* Vignette overlay */}
       <div className="pointer-events-none absolute inset-0 bg-black [mask-image:radial-gradient(ellipse_at_center,transparent_30%,black_80%)]" />
 
-      <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-center justify-center px-6 py-32 text-center md:py-48">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col items-center justify-center px-6 py-32 text-center md:py-48">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-6">
           <span className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium"
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
@@ -116,8 +116,8 @@ export const HeroSection = () => {
         </motion.div>
 
         <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
-          className="whitespace-nowrap text-4xl font-bold md:text-5xl lg:text-6xl" style={{ fontFamily: "var(--font-name)", color: "#ffffff" }}>
-          Taylor Houghtaling
+          className="font-bold w-full break-words" style={{ fontFamily: "var(--font-name)", color: "#ffffff", fontSize: "clamp(2rem, 10vw, 3.75rem)" }}>
+          Taylor<br className="sm:hidden" /> Houghtaling
         </motion.h1>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-4">
@@ -195,7 +195,7 @@ const TypewriterWords = ({ words }: { words: string[] }) => {
     return () => clearTimeout(t);
   }, [text, del, idx, words]);
   return (
-    <div className="flex items-center gap-2 text-2xl font-semibold md:text-3xl" style={{ color: "var(--navy)", fontFamily: "var(--font-sub)" }}>
+    <div className="flex items-center gap-2 font-semibold" style={{ fontSize: "clamp(0.85rem, 3.8vw, 1.875rem)", color: "var(--navy)", fontFamily: "var(--font-sub)" }}>
       <span>{text}</span>
       <span className="animate-pulse" style={{ color: "var(--navy-dark)" }}>|</span>
     </div>
