@@ -116,7 +116,7 @@ export const HeroSection = () => {
         </motion.div>
 
         <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
-          className="font-bold w-full break-words" style={{ fontFamily: "var(--font-name)", color: "#ffffff", fontSize: "clamp(2rem, 10vw, 3.75rem)" }}>
+          className="font-bold w-full" style={{ fontFamily: "var(--font-name)", color: "#ffffff", fontSize: "clamp(1.6rem, 8.5vw, 3.75rem)", wordBreak: "keep-all" }}>
           Taylor<br className="sm:hidden" /> Houghtaling
         </motion.h1>
 
