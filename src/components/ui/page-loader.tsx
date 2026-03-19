@@ -121,14 +121,20 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const fogPos    = new Float32Array(N_FOG * 3);
     const fogSpeeds = new Float32Array(N_FOG);
 
-    for (let i = 0; i < N_FOG; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const r = Math.random() * 110;             // wide scattered cloud
-      fogPos[i * 3]     = Math.cos(angle) * r;
-      fogPos[i * 3 + 1] = Math.sin(angle) * r;
-      fogPos[i * 3 + 2] = -Math.random() * 60;  // shallow depth range
-      fogSpeeds[i] = 0.008 + Math.random() * 0.018; // barely moving
-    }
+    const tanHalfFov = Math.tan((75 / 2) * Math.PI / 180);
+    const aspect = W / H;
+
+    const initFog = (i: number, randomZ = true) => {
+      const z = randomZ ? -(1 + Math.random() * 20) : -(1 + Math.random() * 20);
+      const halfW = Math.abs(z) * tanHalfFov;
+      const halfH = halfW / aspect;
+      fogPos[i * 3]     = (Math.random() * 2 - 1) * halfW;
+      fogPos[i * 3 + 1] = (Math.random() * 2 - 1) * halfH;
+      fogPos[i * 3 + 2] = z;
+      fogSpeeds[i] = 0.008 + Math.random() * 0.018;
+    };
+
+    for (let i = 0; i < N_FOG; i++) initFog(i);
 
     // Store previous positions for trail lines
     const prevPos = new Float32Array(positions);
@@ -292,13 +298,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       // Update fog particles — always slow drift, wrap at camera
       for (let i = 0; i < N_FOG; i++) {
         fogPos[i * 3 + 2] += fogSpeeds[i];
-        if (fogPos[i * 3 + 2] > 2) {
-          const angle = Math.random() * Math.PI * 2;
-          const r = Math.random() * 110;
-          fogPos[i * 3]     = Math.cos(angle) * r;
-          fogPos[i * 3 + 1] = Math.sin(angle) * r;
-          fogPos[i * 3 + 2] = -60;
-        }
+        if (fogPos[i * 3 + 2] > 2) initFog(i, false);
       }
 
       starGeo.attributes.position.needsUpdate  = true;
