@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import * as THREE from "three";
 
-const CANVAS_DURATION = 3400;
+const CANVAS_DURATION = 3000;
 const FADE_START = 0.0;    // canvas overlay begins revealing page immediately
 const SLOW_START = 0.70;   // stars abruptly decelerate + fade
 
