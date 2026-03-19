@@ -125,10 +125,10 @@ export function PageLoader({ children }: { children?: ReactNode }) {
 
     // Read global CSS sage variable
     const sageHex = getComputedStyle(document.documentElement)
-      .getPropertyValue("--sage").trim();        // e.g. "#a8b58c"
+      .getPropertyValue("--navy").trim();
     const sageColor  = new THREE.Color(sageHex);
     const sageDeepHex = getComputedStyle(document.documentElement)
-      .getPropertyValue("--sage-deep").trim();
+      .getPropertyValue("--navy-dark").trim();
     const sageDeepColor = new THREE.Color(sageDeepHex);
 
     // Circular sprite texture
