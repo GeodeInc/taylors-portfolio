@@ -159,30 +159,36 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const _mat   = new THREE.Matrix4();
     const _axis  = new THREE.Vector3(0, 0, 1);
 
-    // ── Fog particles (small dots) ────────────────────────────────────
-    const N_FOG  = 250;
+    // ── Fog G's (InstancedMesh, size varies: big at center, small at edges) ──
+    const N_FOG     = 120;
     const fogPos    = new Float32Array(N_FOG * 3);
     const fogSpeeds = new Float32Array(N_FOG);
+    const fogScales = new Float32Array(N_FOG); // per-particle world-unit scale
 
     const initFog = (i: number) => {
       const z  = -(3 + Math.random() * 5);
       const hw = Math.abs(z) * tanHFov;
       const hh = hw / aspect;
-      fogPos[i*3]     = (Math.random()*2-1) * hw;
-      fogPos[i*3 + 1] = (Math.random()*2-1) * hh;
+      const x  = (Math.random()*2-1) * hw;
+      const y  = (Math.random()*2-1) * hh;
+      fogPos[i*3]     = x;
+      fogPos[i*3 + 1] = y;
       fogPos[i*3 + 2] = z;
       fogSpeeds[i] = 0.003 + Math.random() * 0.006;
+      // Normalised distance from screen centre (0=centre, 1=edge)
+      const dist = Math.sqrt((x/hw)**2 + (y/hh)**2);
+      // Centre: 0.5–0.8  |  Edge: 0.08–0.18
+      fogScales[i] = 0.08 + (1 - dist) * 0.55 + Math.random() * 0.12;
     };
     for (let i = 0; i < N_FOG; i++) initFog(i);
 
-    const fogGeo = new THREE.BufferGeometry();
-    fogGeo.setAttribute("position", new THREE.BufferAttribute(fogPos, 3));
-    const fogMat = new THREE.PointsMaterial({
-      map: gTex, size: 0.12,
-      sizeAttenuation: true, transparent: true, opacity: 0,
-      depthWrite: false, alphaTest: 0.01, blending: THREE.NormalBlending,
+    const fogMeshMat = new THREE.MeshBasicMaterial({
+      map: gTex, transparent: true, depthWrite: false,
+      side: THREE.DoubleSide, blending: THREE.NormalBlending, opacity: 0,
     });
-    scene.add(new THREE.Points(fogGeo, fogMat));
+    const fogMesh = new THREE.InstancedMesh(gGeo, fogMeshMat, N_FOG);
+    fogMesh.frustumCulled = false;
+    scene.add(fogMesh);
 
     // ── Resize ────────────────────────────────────────────────────────
     const onResize = () => {
@@ -239,7 +245,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       } else {
         fogAlpha = 0.38 * Math.pow(1 - (progress - PAUSE_END) / (1 - PAUSE_END), 0.55);
       }
-      fogMat.opacity = fogAlpha;
+      fogMeshMat.opacity = fogAlpha;
 
       // Update G instances
       for (let i = 0; i < N; i++) {
@@ -263,12 +269,17 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       }
       gMesh.instanceMatrix.needsUpdate = true;
 
-      // Update fog
+      _quat.identity();
+      // Update fog G's
       for (let i = 0; i < N_FOG; i++) {
         fogPos[i*3 + 2] += fogSpeeds[i];
         if (fogPos[i*3 + 2] > 2) initFog(i);
+        _pos.set(fogPos[i*3], fogPos[i*3+1], fogPos[i*3+2]);
+        _scale.setScalar(fogScales[i]);
+        _mat.compose(_pos, _quat, _scale); // reuse identity quat (no spin on fog)
+        fogMesh.setMatrixAt(i, _mat);
       }
-      fogGeo.attributes.position.needsUpdate = true;
+      fogMesh.instanceMatrix.needsUpdate = true;
 
       renderer.render(scene, camera);
 
