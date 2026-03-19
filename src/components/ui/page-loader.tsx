@@ -101,12 +101,6 @@ export function PageLoader({ children }: { children?: ReactNode }) {
 
       {(!show || phase === "done") && <ScatteredNav />}
 
-      <button
-        onClick={() => { sessionStorage.removeItem("intro-played"); window.location.reload(); }}
-        className="fixed top-4 right-4 z-[10001] rounded-full border border-white/20 px-4 py-1.5 text-xs text-white/50 hover:text-white hover:border-white/40 transition-colors"
-      >
-        replay
-      </button>
     </>
   );
 }
