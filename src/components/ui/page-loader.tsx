@@ -194,13 +194,13 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       const elapsed = now - startTimeRef.current;
       const progress = Math.min(elapsed / CANVAS_DURATION, 1);
 
-      // Speed curve: ramp up → abrupt snap to slow
+      // Speed curve: true exponential acceleration → abrupt snap to slow
       let speedMult: number;
       if (progress < SLOW_START) {
-        speedMult = 1 + Math.pow(progress / SLOW_START, 2) * 5;   // 1× → 6×
+        speedMult = Math.pow(18, progress / SLOW_START);            // 1× → 18× exponentially
       } else {
         const t = (progress - SLOW_START) / (1 - SLOW_START);
-        speedMult = 6 * Math.pow(1 - t, 3);                        // sharp drop to 0
+        speedMult = 18 * Math.pow(1 - t, 3);                       // sharp drop to 0
       }
 
       // Star + trail opacity: fade in final stretch
