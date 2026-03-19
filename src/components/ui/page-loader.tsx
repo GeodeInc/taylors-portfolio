@@ -92,77 +92,43 @@ const rafRef = useRef<number>(0);
 
       const W0 = canvas.width;
       const H0 = canvas.height;
-      type Particle = { angle: number; dist: number; baseSpeed: number; size: number; alpha: number; gx: number; gy: number };
-      type Edge = [Particle, Particle];
 
-      // Triangular (geodesic) grid — offset every other row by SPACING/2
-      const SPACING = 22;
-      const ROW_H = SPACING * Math.sqrt(3) / 2;
-      const particles: Particle[] = [];
-      const particleMap = new Map<string, Particle>();
-      const halfW = Math.ceil(W0 / 2 / SPACING) + 2;
-      const halfH = Math.ceil(H0 / 2 / ROW_H) + 2;
+      // 3D wormhole: particles in a cylindrical tunnel, projected to 2D via Z-depth
+      const BASE_FOCAL = Math.min(W0, H0) * 0.78;
+      const MAX_Z = BASE_FOCAL * 5.5;
+      const MIN_Z = BASE_FOCAL * 0.06;
+      const TUBE_R = Math.min(W0, H0) * 0.20;
 
-      for (let gy = -halfH; gy <= halfH; gy++) {
-        for (let gx = -halfW; gx <= halfW; gx++) {
-          const rowOffset = ((gy % 2) + 2) % 2 === 1 ? SPACING / 2 : 0;
-          const dx = gx * SPACING + rowOffset;
-          const dy = gy * ROW_H;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 2) continue;
-          const p: Particle = {
-            angle: Math.atan2(dy, dx),
-            dist,
-            baseSpeed: 0.25 + Math.random() * 0.45,
-            size: 0.4 + Math.random() * 1.0,
-            alpha: 0.5 + Math.random() * 0.5,
-            gx,
-            gy,
-          };
-          particles.push(p);
-          particleMap.set(`${gx},${gy}`, p);
-        }
+      type P3 = { a: number; r: number; z: number; spd: number; sz: number; al: number; fast: boolean };
+      const pts: P3[] = [];
+
+      // Regular tunnel particles
+      for (let i = 0; i < 750; i++) {
+        pts.push({
+          a: Math.random() * Math.PI * 2,
+          r: TUBE_R * (0.25 + Math.random() * 1.1),
+          z: MIN_Z + Math.random() * (MAX_Z - MIN_Z),
+          spd: 5 + Math.random() * 9,
+          sz: 1.0 + Math.random() * 1.8,
+          al: 0.45 + Math.random() * 0.55,
+          fast: false,
+        });
+      }
+      // Shooting stars — fast, long trail
+      for (let i = 0; i < 14; i++) {
+        pts.push({
+          a: Math.random() * Math.PI * 2,
+          r: TUBE_R * (0.1 + Math.random() * 0.85),
+          z: MIN_Z + Math.random() * (MAX_Z - MIN_Z),
+          spd: 35 + Math.random() * 30,
+          sz: 2.5 + Math.random() * 2,
+          al: 0.85 + Math.random() * 0.15,
+          fast: true,
+        });
       }
 
-      // Precompute mesh edges (3 directed per node covers all triangles without duplicates)
-      const edges: Edge[] = [];
-      for (const p of particles) {
-        const { gx, gy } = p;
-        const isOdd = ((gy % 2) + 2) % 2 === 1;
-        const neighborKeys = [
-          `${gx + 1},${gy}`,
-          isOdd ? `${gx + 1},${gy + 1}` : `${gx},${gy + 1}`,
-          isOdd ? `${gx},${gy + 1}` : `${gx - 1},${gy + 1}`,
-        ];
-        for (const key of neighborKeys) {
-          const neighbor = particleMap.get(key);
-          if (neighbor) edges.push([p, neighbor]);
-        }
-      }
-
-      // Drift stars — slow, fade before circle
-      const maxR0 = Math.sqrt((W0 / 2) ** 2 + (H0 / 2) ** 2) * 1.1;
-      type DriftStar = { angle: number; dist: number; speed: number; size: number; alpha: number; trail: { x: number; y: number }[] };
-      const driftStars: DriftStar[] = Array.from({ length: 45 }, () => ({
-        angle: Math.random() * Math.PI * 2,
-        dist: 20 + Math.random() * maxR0 * 0.9,
-        speed: 0.3 + Math.random() * 0.35,
-        size: 1.2 + Math.random() * 1.8,
-        alpha: 0.5 + Math.random() * 0.45,
-        trail: [],
-      }));
-
-      // Shooting stars — fast inward with trail
-      type ShootingStar = { angle: number; dist: number; speed: number; trail: { x: number; y: number }[] };
-      const shootingStars: ShootingStar[] = Array.from({ length: 8 }, () => ({
-        angle: Math.random() * Math.PI * 2,
-        dist: maxR0 * (0.4 + Math.random() * 0.6),
-        speed: 2.5 + Math.random() * 2.5,
-        trail: [],
-      }));
-
-      // Warm dark background fill before first frame
-      ctx.fillStyle = "#090704";
+      // Opaque first frame
+      ctx.fillStyle = "#050403";
       ctx.fillRect(0, 0, W0, H0);
 
       startTimeRef.current = performance.now();
@@ -176,119 +142,108 @@ const rafRef = useRef<number>(0);
         const cx = W / 2;
         const cy = H / 2;
         const maxR = Math.sqrt(cx * cx + cy * cy) * 1.1;
-        const circleR = maxR * progress * progress;
 
-        // Warm dark background
-        ctx.fillStyle = "#090704";
+        // ease-in → fast middle → snap: cubic ease-in
+        const eased = progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        const circleR = maxR * eased;
+
+        // FOV narrows over time (zoom-forward effect): smaller focal = wider view = things rush out faster
+        const focal = BASE_FOCAL * (1.0 - progress * 0.18);
+
+        // Acceleration multiplier: slow start → fast middle → snap
+        const accel = 1 + Math.pow(progress, 1.8) * 7;
+        const spiralRate = 0.0015 + progress * 0.005;
+
+        // Motion blur: semi-transparent fill instead of clear — trails persist across frames
+        ctx.fillStyle = "rgba(5,4,3,0.78)";
         ctx.fillRect(0, 0, W, H);
 
-        // Draw particles — all moving inward with radial streak tails
-        for (const p of particles) {
-          const normalizedDist = p.dist / maxR;
-          // Gravitational pull: increases with progress and proximity to center
-          const grav = 1 + (1 - normalizedDist) * 18 * progress * progress;
-          p.dist -= p.baseSpeed * grav;
-          // Spiral: faster near center
-          p.angle += 0.003 + (1 - normalizedDist) * 0.012;
-
-          // Absorb into circle or spiraled to center → respawn at outer edge
-          if (p.dist <= circleR + 6 || p.dist <= 1) {
-            p.dist = maxR * (0.55 + Math.random() * 0.45);
-            p.angle = Math.random() * Math.PI * 2;
-            continue;
-          }
-
-          const x = cx + Math.cos(p.angle) * p.dist;
-          const y = cy + Math.sin(p.angle) * p.dist;
-
-          // Fade as particle approaches circle edge
-          const proximity = p.dist - circleR;
-          const fadeA = p.alpha * Math.min(proximity / 55, 1) * Math.min(p.dist / 20, 1);
-          if (fadeA <= 0) continue;
-
-          // Bright head
+        // --- Perspective tunnel rings (depth reference lines) ---
+        for (let i = 1; i <= 12; i++) {
+          const zRing = MAX_Z * (i / 13);
+          const ringScale = focal / zRing;
+          const ringR = TUBE_R * ringScale;
+          if (ringR < 4 || ringR > maxR * 1.4) continue;
+          const depthFade = Math.pow(1 - zRing / MAX_Z, 2) * 0.1;
+          if (depthFade < 0.003) continue;
           ctx.beginPath();
-          ctx.arc(x, y, p.size * 0.65, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(245,243,232,${fadeA})`;
-          ctx.fill();
+          ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(240,238,225,${depthFade})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
         }
 
-        // Drift stars — slow inward, trail, fade before circle
-        const FADE_MARGIN = 70;
-        const DRIFT_TRAIL = 12;
-        for (const ds of driftStars) {
-          ds.dist -= ds.speed;
-          ds.angle += 0.003 + progress * progress * 0.04;
-          if (ds.dist <= circleR + 8 || ds.dist <= 1) {
-            ds.dist = maxR * (0.5 + Math.random() * 0.5);
-            ds.angle = Math.random() * Math.PI * 2;
-            ds.trail = [];
+        // --- 3D particles ---
+        for (const p of pts) {
+          p.a += spiralRate;
+          p.z -= p.spd * accel;
+
+          if (p.z <= MIN_Z) {
+            p.z = MAX_Z * (0.35 + Math.random() * 0.65);
+            p.a = Math.random() * Math.PI * 2;
             continue;
           }
-          const proximity = ds.dist - circleR;
-          const fadeA = ds.alpha * Math.min(proximity / FADE_MARGIN, 1);
-          if (fadeA <= 0) { ds.trail = []; continue; }
-          const dx = cx + Math.cos(ds.angle) * ds.dist;
-          const dy = cy + Math.sin(ds.angle) * ds.dist;
-          ds.trail.push({ x: dx, y: dy });
-          if (ds.trail.length > DRIFT_TRAIL) ds.trail.shift();
-          for (let t = 1; t < ds.trail.length; t++) {
-            const ta = fadeA * (t / ds.trail.length) * 0.6;
+
+          const scale = focal / p.z;
+          const wx = Math.cos(p.a) * p.r;
+          const wy = Math.sin(p.a) * p.r;
+          const sx = cx + wx * scale;
+          const sy = cy + wy * scale;
+
+          if (sx < -80 || sx > W + 80 || sy < -80 || sy > H + 80) continue;
+
+          // Skip pixels that will be erased by destination-out (perf optimization)
+          if ((sx - cx) * (sx - cx) + (sy - cy) * (sy - cy) < circleR * circleR) continue;
+
+          // Depth-based brightness: dim when far (large z), bright when close (small z)
+          const closeness = Math.min(focal * 0.5 / p.z, 1.0);
+          const farDim = Math.min(p.z / (MAX_Z * 0.3), 1.0);
+          const fa = p.al * (0.08 + 0.92 * closeness) * farDim;
+          if (fa < 0.015) continue;
+
+          const dotR = Math.min(scale * p.sz * 0.11, p.fast ? 3.0 : 2.2);
+
+          // Trail: project from slightly further Z (behind direction of travel = toward center)
+          const trailMult = p.fast ? 5.5 : 2.2;
+          const trailZ = Math.min(p.z + p.spd * accel * trailMult, MAX_Z);
+          const trailScale = focal / trailZ;
+          const trailSx = cx + wx * trailScale;
+          const trailSy = cy + wy * trailScale;
+
+          ctx.beginPath();
+          ctx.moveTo(trailSx, trailSy);
+          ctx.lineTo(sx, sy);
+          ctx.strokeStyle = `rgba(245,243,232,${fa * (p.fast ? 0.8 : 0.38)})`;
+          ctx.lineWidth = p.fast ? Math.min(dotR * 0.55, 1.3) : dotR * 0.32;
+          ctx.stroke();
+
+          if (dotR > 0.3) {
             ctx.beginPath();
-            ctx.moveTo(ds.trail[t - 1].x, ds.trail[t - 1].y);
-            ctx.lineTo(ds.trail[t].x, ds.trail[t].y);
-            ctx.strokeStyle = `rgba(245,243,232,${ta})`;
-            ctx.lineWidth = ds.size * 0.7;
-            ctx.stroke();
+            ctx.arc(sx, sy, dotR, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(245,243,232,${fa})`;
+            ctx.fill();
           }
-          ctx.beginPath();
-          ctx.arc(dx, dy, ds.size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(245,243,232,${fadeA})`;
-          ctx.fill();
         }
 
-        // Shooting stars — fast inward, trail, fade before circle
-        const SHOOT_FADE = 80;
-        const TRAIL_LEN = 22;
-        for (const star of shootingStars) {
-          star.dist -= star.speed * (1 + progress * 0.5);
-          star.angle += 0.003 + progress * progress * 0.04;
-          if (star.dist <= circleR + 8 || star.dist <= 1) {
-            star.dist = maxR * (0.4 + Math.random() * 0.6);
-            star.angle = Math.random() * Math.PI * 2;
-            star.trail = [];
-            continue;
-          }
-          const proximity = star.dist - circleR;
-          const fadeA = Math.min(proximity / SHOOT_FADE, 1);
-          const sx = cx + Math.cos(star.angle) * star.dist;
-          const sy = cy + Math.sin(star.angle) * star.dist;
-          star.trail.push({ x: sx, y: sy });
-          if (star.trail.length > TRAIL_LEN) star.trail.shift();
-          for (let t = 1; t < star.trail.length; t++) {
-            const a = fadeA * (t / star.trail.length) * 0.85;
-            ctx.beginPath();
-            ctx.moveTo(star.trail[t - 1].x, star.trail[t - 1].y);
-            ctx.lineTo(star.trail[t].x, star.trail[t].y);
-            ctx.strokeStyle = `rgba(245,243,232,${a})`;
-            ctx.lineWidth = 1.2;
-            ctx.stroke();
-          }
-          ctx.beginPath();
-          ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(245,243,232,${fadeA * 0.95})`;
-          ctx.fill();
-        }
-
-        // Vignette: darken outer edges to create tunnel depth
-        const vignette = ctx.createRadialGradient(cx, cy, maxR * 0.12, cx, cy, maxR * 0.92);
-        vignette.addColorStop(0, "rgba(0,0,0,0)");
-        vignette.addColorStop(0.5, "rgba(0,0,0,0)");
-        vignette.addColorStop(1, "rgba(0,0,0,0.88)");
-        ctx.fillStyle = vignette;
+        // --- Vanishing point: dark center (tunnel depth) ---
+        const vpR = Math.max(circleR * 1.2, maxR * 0.08);
+        const vanish = ctx.createRadialGradient(cx, cy, 0, cx, cy, vpR);
+        vanish.addColorStop(0, "rgba(0,0,0,0.72)");
+        vanish.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = vanish;
         ctx.fillRect(0, 0, W, H);
 
-        // Destination-out: punch hole to reveal page content
+        // --- Outer vignette ---
+        const vig = ctx.createRadialGradient(cx, cy, maxR * 0.35, cx, cy, maxR);
+        vig.addColorStop(0, "rgba(0,0,0,0)");
+        vig.addColorStop(0.65, "rgba(0,0,0,0)");
+        vig.addColorStop(1, "rgba(0,0,0,0.92)");
+        ctx.fillStyle = vig;
+        ctx.fillRect(0, 0, W, H);
+
+        // --- Destination-out: reveal page through expanding circle ---
         ctx.save();
         ctx.globalCompositeOperation = "destination-out";
         ctx.beginPath();
@@ -325,7 +280,7 @@ const rafRef = useRef<number>(0);
             <motion.div
               className="fixed inset-0 z-[9999] overflow-hidden"
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
+              transition={{ duration: 0.45, ease: "easeIn" }}
             >
               <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
             </motion.div>
