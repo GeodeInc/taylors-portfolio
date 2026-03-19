@@ -264,7 +264,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       const starAlpha =
         progress < PAUSE_END
           ? 1
-          : Math.pow(1 - (progress - PAUSE_END) / (1 - PAUSE_END), 1.5);
+          : Math.pow(1 - (progress - PAUSE_END) / (1 - PAUSE_END), 0.4);
       starMat.opacity  = starAlpha;
       trailMat.opacity = starAlpha * 0.5;
       // Fog appears when stars pause, lingers longer than stars
