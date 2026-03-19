@@ -105,12 +105,27 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const positions = new Float32Array(N * 3);
     const speeds    = new Float32Array(N);
 
+    let currentProgress = 0; // updated each frame so initStar can read it
+    const starTanHalfFov = Math.tan((75 / 2) * Math.PI / 180);
+    const starAspect = W / H;
+
     const initStar = (i: number, randomZ = true) => {
-      const angle = Math.random() * Math.PI * 2;
-      const r = Math.sqrt(Math.random()) * 70;
-      positions[i * 3]     = Math.cos(angle) * r;
-      positions[i * 3 + 1] = Math.sin(angle) * r;
-      positions[i * 3 + 2] = randomZ ? -Math.random() * 180 : -180;
+      const paused = currentProgress >= PAUSE_START;
+      if (paused) {
+        // Respawn within frustum at near depth — stays visible and drifts slowly
+        const z = -(1 + Math.random() * 10);
+        const hw = Math.abs(z) * starTanHalfFov;
+        const hh = hw / starAspect;
+        positions[i * 3]     = (Math.random() * 2 - 1) * hw;
+        positions[i * 3 + 1] = (Math.random() * 2 - 1) * hh;
+        positions[i * 3 + 2] = z;
+      } else {
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.sqrt(Math.random()) * 70;
+        positions[i * 3]     = Math.cos(angle) * r;
+        positions[i * 3 + 1] = Math.sin(angle) * r;
+        positions[i * 3 + 2] = randomZ ? -Math.random() * 180 : -180;
+      }
       speeds[i] = 0.25 + Math.random() * 0.75;
     };
 
@@ -229,6 +244,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
 
       const elapsed = now - startTimeRef.current;
       const progress = Math.min(elapsed / CANVAS_DURATION, 1);
+      currentProgress = progress;
 
       // Phase 1: exponential acceleration
       // Phase 2: abrupt stop → tiny drift (stars scattered, subtle movement)
