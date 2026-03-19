@@ -34,7 +34,7 @@ function ScatteredNav() {
     <motion.div
       animate={{ y: visible ? 0 : -80, opacity: visible ? 1 : 0 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed top-4 right-4 z-[5000] flex items-center gap-1 sm:gap-2 pointer-events-auto"
+      className="fixed top-4 right-4 md:top-12 md:right-0 md:left-0 md:justify-center z-[5000] flex items-center gap-1 sm:gap-2 pointer-events-auto"
     >
       {NAV_TAGS.map((tag, i) => (
         <motion.a
