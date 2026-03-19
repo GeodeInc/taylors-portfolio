@@ -6,8 +6,8 @@ import type { ReactNode } from "react";
 import * as THREE from "three";
 
 const CANVAS_DURATION = 4000;
-const PAUSE_START = 0.58;  // stars abruptly decelerate to near-stop
-const PAUSE_END   = 0.72;  // drift window ends, stars begin fading
+const PAUSE_START = 0.50;  // 2s — stars abruptly decelerate to near-stop
+const PAUSE_END   = 0.75;  // 3s — drift window ends, stars + page fade together
 // page canvas opacity fades throughout (power 4 curve)
 
 const NAV_TAGS = [
@@ -279,12 +279,12 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       }
       fogMat.opacity = fogAlpha;
 
-      // Canvas opacity: fully opaque during burst, fades during pause phase
-      if (progress < PAUSE_START) {
+      // Canvas opacity: opaque during burst+deceleration, fades with particles in phase 3
+      if (progress < PAUSE_END) {
         canvas.style.opacity = "1";
       } else {
-        const t = (progress - PAUSE_START) / (PAUSE_END - PAUSE_START);
-        canvas.style.opacity = String(Math.max(1 - Math.pow(Math.min(t, 1), 1.5), 0));
+        const t = (progress - PAUSE_END) / (1 - PAUSE_END);
+        canvas.style.opacity = String(Math.max(1 - Math.pow(t, 0.4), 0));
       }
 
       // Update star positions + build trail geometry
