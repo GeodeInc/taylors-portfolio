@@ -185,7 +185,21 @@ const TypewriterWords = ({ words }: { words: string[] }) => {
   const [idx, setIdx] = React.useState(0);
   const [text, setText] = React.useState("");
   const [del, setDel] = React.useState(false);
+  // Paused until intro animation completes (or skipped on repeat visits)
+  const [ready, setReady] = React.useState(
+    () => typeof sessionStorage !== "undefined" && sessionStorage.getItem("intro-played") !== "1"
+      ? false
+      : true
+  );
   React.useEffect(() => {
+    if (ready) return;
+    const handler = () => setReady(true);
+    window.addEventListener("intro-done", handler);
+    return () => window.removeEventListener("intro-done", handler);
+  }, [ready]);
+
+  React.useEffect(() => {
+    if (!ready) return;
     const word = words[idx];
     const t = setTimeout(() => {
       if (!del && text === word) { setTimeout(() => setDel(true), 1500); return; }
@@ -193,7 +207,7 @@ const TypewriterWords = ({ words }: { words: string[] }) => {
       setText(del ? word.slice(0, text.length - 1) : word.slice(0, text.length + 1));
     }, del ? 50 : 100);
     return () => clearTimeout(t);
-  }, [text, del, idx, words]);
+  }, [text, del, idx, words, ready]);
   return (
     <div className="flex items-center gap-2 font-semibold" style={{ fontSize: "clamp(0.85rem, 3.8vw, 1.875rem)", color: "var(--navy)", fontFamily: "var(--font-sub)" }}>
       <span>{text}</span>

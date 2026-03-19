@@ -286,7 +286,10 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(draw);
       } else {
-        if (alive) setPhase("done");
+        if (alive) {
+          setPhase("done");
+          window.dispatchEvent(new Event("intro-done"));
+        }
         renderer.dispose();
       }
     };
