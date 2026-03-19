@@ -160,13 +160,13 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const _axis  = new THREE.Vector3(0, 0, 1);
 
     // ── Fog G's (InstancedMesh, size varies: big at center, small at edges) ──
-    const N_FOG     = 120;
+    const N_FOG     = 45;
     const fogPos    = new Float32Array(N_FOG * 3);
     const fogSpeeds = new Float32Array(N_FOG);
     const fogScales = new Float32Array(N_FOG); // per-particle world-unit scale
 
     const initFog = (i: number) => {
-      const z  = -(3 + Math.random() * 5);
+      const z  = -(4 + Math.random() * 12);
       const hw = Math.abs(z) * tanHFov;
       const hh = hw / aspect;
       const x  = (Math.random()*2-1) * hw;
@@ -177,8 +177,8 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       fogSpeeds[i] = 0.003 + Math.random() * 0.006;
       // Normalised distance from screen centre (0=centre, 1=edge)
       const dist = Math.sqrt((x/hw)**2 + (y/hh)**2);
-      // Centre: 0.5–0.8  |  Edge: 0.08–0.18
-      fogScales[i] = 0.08 + (1 - dist) * 0.55 + Math.random() * 0.12;
+      // Centre: 0.12–0.22  |  Edge: 0.03–0.07
+      fogScales[i] = 0.03 + (1 - dist) * 0.16 + Math.random() * 0.04;
     };
     for (let i = 0; i < N_FOG; i++) initFog(i);
 
