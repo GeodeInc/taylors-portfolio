@@ -263,7 +263,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
         _pos.set(positions[i*3], positions[i*3 + 1], positions[i*3 + 2]);
         _quat.setFromAxisAngle(_axis, rotAngles[i]);
         // Size in world units — stays constant, camera perspective handles depth scaling
-        _scale.setScalar(0.08 + (Math.min(speedMult, 18) / 18) * 0.38);
+        _scale.setScalar(0.08 + (Math.min(speedMult, 18) / 18) * 1.2);
         _mat.compose(_pos, _quat, _scale);
         gMesh.setMatrixAt(i, _mat);
       }
