@@ -35,7 +35,7 @@ function ScatteredNav() {
     <motion.div
       animate={{ y: visible ? 0 : -80, opacity: visible ? 1 : 0 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed top-4 right-4 md:top-12 md:right-0 md:left-0 md:justify-center z-[5000] flex items-center gap-1 sm:gap-2 pointer-events-auto"
+      className="fixed top-10 right-4 md:top-12 md:right-0 md:left-0 md:justify-center z-[5000] flex items-center gap-1 sm:gap-2 pointer-events-auto"
     >
       {NAV_TAGS.map((tag, i) => (
         <motion.a
@@ -45,7 +45,7 @@ function ScatteredNav() {
           style={{
             fontFamily: "var(--font-sub)",
             borderColor: "var(--navy-border)",
-            backgroundColor: "var(--navy-fill-sm)",
+            backgroundColor: "#000000",
             color: "var(--navy)",
           }}
           initial={{ x: 30, opacity: 0, scale: 0.85 }}
