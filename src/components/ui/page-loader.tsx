@@ -108,7 +108,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const initStar = (i: number, randomZ = true) => {
       const angle = Math.random() * Math.PI * 2;
       // Radial distance: use sqrt for uniform area distribution
-      const r = Math.sqrt(Math.random()) * 18;
+      const r = Math.sqrt(Math.random()) * 40;
       positions[i * 3]     = Math.cos(angle) * r;
       positions[i * 3 + 1] = Math.sin(angle) * r;
       positions[i * 3 + 2] = randomZ ? -Math.random() * 180 : -180;
