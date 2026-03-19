@@ -117,7 +117,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     for (let i = 0; i < N; i++) initStar(i, true);
 
     // ── Fog particles (tiny, slow, dense cloud) ───────────────────────
-    const N_FOG = 9000;
+    const N_FOG = 25000;
     const fogPos    = new Float32Array(N_FOG * 3);
     const fogSpeeds = new Float32Array(N_FOG);
 
