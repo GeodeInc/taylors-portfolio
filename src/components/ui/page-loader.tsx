@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import * as THREE from "three";
 
 const CANVAS_DURATION = 3400;
-const FADE_START = 0.55;   // canvas overlay begins revealing page
+const FADE_START = 0.0;    // canvas overlay begins revealing page immediately
 const SLOW_START = 0.70;   // stars abruptly decelerate + fade
 
 const NAV_TAGS = [
@@ -212,7 +212,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       // Canvas element opacity: reveals page underneath
       if (progress >= FADE_START) {
         const t = (progress - FADE_START) / (1 - FADE_START);
-        canvas.style.opacity = String(Math.max(1 - Math.pow(t, 2.5), 0));
+        canvas.style.opacity = String(Math.max(1 - Math.pow(t, 2), 0));
       }
 
       // Update star positions + build trail geometry
