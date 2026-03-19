@@ -102,13 +102,11 @@ export function PageLoader({ children }: { children?: ReactNode }) {
 
     // ── Stars ─────────────────────────────────────────────────────────
     const N = 3000;
-    // Stars: random angle + radius for XY, random Z spread for depth
     const positions = new Float32Array(N * 3);
     const speeds    = new Float32Array(N);
 
     const initStar = (i: number, randomZ = true) => {
       const angle = Math.random() * Math.PI * 2;
-      // Radial distance: use sqrt for uniform area distribution
       const r = Math.sqrt(Math.random()) * 70;
       positions[i * 3]     = Math.cos(angle) * r;
       positions[i * 3 + 1] = Math.sin(angle) * r;
@@ -117,6 +115,20 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     };
 
     for (let i = 0; i < N; i++) initStar(i, true);
+
+    // ── Fog particles (tiny, slow, dense cloud) ───────────────────────
+    const N_FOG = 9000;
+    const fogPos    = new Float32Array(N_FOG * 3);
+    const fogSpeeds = new Float32Array(N_FOG);
+
+    for (let i = 0; i < N_FOG; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = Math.random() * 110;             // wide scattered cloud
+      fogPos[i * 3]     = Math.cos(angle) * r;
+      fogPos[i * 3 + 1] = Math.sin(angle) * r;
+      fogPos[i * 3 + 2] = -Math.random() * 60;  // shallow depth range
+      fogSpeeds[i] = 0.008 + Math.random() * 0.018; // barely moving
+    }
 
     // Store previous positions for trail lines
     const prevPos = new Float32Array(positions);
@@ -176,6 +188,23 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     });
     scene.add(new THREE.LineSegments(trailGeo, trailMat));
 
+    // ── Fog geometry ──────────────────────────────────────────────────
+    const fogGeo = new THREE.BufferGeometry();
+    fogGeo.setAttribute("position", new THREE.BufferAttribute(fogPos, 3));
+    const fogMat = new THREE.PointsMaterial({
+      color: sageColor,
+      map: spriteTex,
+      size: 0.07,
+      sizeAttenuation: true,
+      transparent: true,
+      opacity: 0.35,
+      depthWrite: false,
+      alphaTest: 0.005,
+      blending: THREE.AdditiveBlending,
+    });
+    const fogPoints = new THREE.Points(fogGeo, fogMat);
+    scene.add(fogPoints);
+
     // ── Resize ────────────────────────────────────────────────────────
     const onResize = () => {
       const w = window.innerWidth;
@@ -208,13 +237,19 @@ export function PageLoader({ children }: { children?: ReactNode }) {
         speedMult = 0.025;                                          // gentle drift
       }
 
-      // Star opacity: full until PAUSE_END, then fade out
+      // Star + fog opacity: full until PAUSE_END, then fade out
       const starAlpha =
         progress < PAUSE_END
           ? 1
           : Math.pow(1 - (progress - PAUSE_END) / (1 - PAUSE_END), 1.5);
       starMat.opacity  = starAlpha;
       trailMat.opacity = starAlpha * 0.5;
+      // Fog builds up during pause, then fades with stars
+      const fogAlpha =
+        progress < PAUSE_START
+          ? Math.min(progress / PAUSE_START, 1) * 0.35          // fade in during burst
+          : starAlpha * 0.35;
+      fogMat.opacity = fogAlpha;
 
       // Canvas element opacity: page gradually reveals (power 4 = slow start)
       canvas.style.opacity = String(Math.max(1 - Math.pow(progress, 4), 0));
@@ -249,8 +284,21 @@ export function PageLoader({ children }: { children?: ReactNode }) {
         }
       }
 
+      // Update fog particles — always slow drift, wrap at camera
+      for (let i = 0; i < N_FOG; i++) {
+        fogPos[i * 3 + 2] += fogSpeeds[i];
+        if (fogPos[i * 3 + 2] > 2) {
+          const angle = Math.random() * Math.PI * 2;
+          const r = Math.random() * 110;
+          fogPos[i * 3]     = Math.cos(angle) * r;
+          fogPos[i * 3 + 1] = Math.sin(angle) * r;
+          fogPos[i * 3 + 2] = -60;
+        }
+      }
+
       starGeo.attributes.position.needsUpdate  = true;
       trailGeo.attributes.position.needsUpdate = true;
+      fogGeo.attributes.position.needsUpdate   = true;
 
       renderer.render(scene, camera);
 
