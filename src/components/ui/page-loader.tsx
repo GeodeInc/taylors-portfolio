@@ -5,12 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import * as THREE from "three";
 
-// Phase 1: 0–2s  burst (exponential accel)
-// Phase 2: 2–3s  slowdown + page fades in
-// Phase 3: 3–6s  particles fade out over page
 const CANVAS_DURATION = 4500;
-const PAUSE_START = 2000 / CANVAS_DURATION; // 0.333
-const PAUSE_END   = 2500 / CANVAS_DURATION; // 0.556
+const PAUSE_START = 2000 / CANVAS_DURATION;
+const PAUSE_END   = 2500 / CANVAS_DURATION;
 
 const NAV_TAGS = [
   { id: "home",     label: "Home"     },
@@ -68,10 +65,10 @@ function ScatteredNav() {
 export function PageLoader({ children }: { children?: ReactNode }) {
   const [show,  setShow]  = useState(false);
   const [phase, setPhase] = useState<"wormhole" | "done">("wormhole");
-  const canvasRef  = useRef<HTMLCanvasElement>(null);
-  const darkBgRef  = useRef<HTMLDivElement>(null);
-  const rafRef     = useRef<number>(0);
-  const startRef   = useRef<number>(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const darkBgRef = useRef<HTMLDivElement>(null);
+  const rafRef    = useRef<number>(0);
+  const startRef  = useRef<number>(0);
 
   useEffect(() => {
     if (!sessionStorage.getItem("intro-played")) {
@@ -91,48 +88,40 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const W = window.innerWidth;
     const H = window.innerHeight;
 
-    // ── Renderer (alpha:true → transparent canvas bg) ─────────────────
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     renderer.setSize(W, H);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-    renderer.setClearColor(0x000000, 0); // transparent — darkBg div handles background
+    renderer.setClearColor(0x000000, 0);
 
     const scene  = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, W / H, 0.1, 300);
     camera.position.z = 0;
 
-    // ── CSS colors ────────────────────────────────────────────────────
-    const navyHex     = getComputedStyle(document.documentElement).getPropertyValue("--navy").trim();
-    const navyDarkHex = getComputedStyle(document.documentElement).getPropertyValue("--navy-dark").trim();
-    const navyColor     = new THREE.Color(navyHex);
-    const navyDarkColor = new THREE.Color(navyDarkHex);
+    // ── G sprite texture ──────────────────────────────────────────────
+    const gCanvas = document.createElement("canvas");
+    gCanvas.width = gCanvas.height = 128;
+    const gCtx = gCanvas.getContext("2d")!;
+    gCtx.clearRect(0, 0, 128, 128);
+    gCtx.fillStyle = "white";
+    gCtx.font = '88px "Fredoka One", "Fredoka", sans-serif';
+    gCtx.textAlign = "center";
+    gCtx.textBaseline = "middle";
+    gCtx.fillText("G", 64, 68);
+    const gTex = new THREE.CanvasTexture(gCanvas);
 
-    // Soft circular sprite
-    const sp = document.createElement("canvas");
-    sp.width = sp.height = 64;
-    const spCtx = sp.getContext("2d")!;
-    const grd = spCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    const nr = Math.round(navyColor.r * 255);
-    const ng = Math.round(navyColor.g * 255);
-    const nb = Math.round(navyColor.b * 255);
-    grd.addColorStop(0,   `rgba(${nr},${ng},${nb},1)`);
-    grd.addColorStop(0.5, `rgba(${nr},${ng},${nb},0.7)`);
-    grd.addColorStop(1,   `rgba(${nr},${ng},${nb},0)`);
-    spCtx.fillStyle = grd;
-    spCtx.fillRect(0, 0, 64, 64);
-    const spriteTex = new THREE.CanvasTexture(sp);
-
-    // ── Main stars ────────────────────────────────────────────────────
-    const N = 1800;
+    // ── Stars as spinning G's (InstancedMesh) ─────────────────────────
+    const N       = 1800;
     const positions = new Float32Array(N * 3);
     const speeds    = new Float32Array(N);
-    let   curProg   = 0;
-    const tanHFov   = Math.tan((75 / 2) * Math.PI / 180);
-    const aspect    = W / H;
+    const rotAngles = new Float32Array(N);
+    const rotSpeeds = new Float32Array(N);
+    let curProg = 0;
+
+    const tanHFov = Math.tan((75 / 2) * Math.PI / 180);
+    const aspect  = W / H;
 
     const initStar = (i: number, randomZ = true) => {
       if (curProg >= PAUSE_START) {
-        // During pause: spawn close, within frustum
         const z  = -(1 + Math.random() * 10);
         const hw = Math.abs(z) * tanHFov;
         const hh = hw / aspect;
@@ -146,31 +135,34 @@ export function PageLoader({ children }: { children?: ReactNode }) {
         positions[i*3 + 1] = Math.sin(angle) * r;
         positions[i*3 + 2] = randomZ ? -Math.random() * 180 : -180;
       }
-      speeds[i] = 0.25 + Math.random() * 0.75;
+      speeds[i]    = 0.25 + Math.random() * 0.75;
+      rotAngles[i] = Math.random() * Math.PI * 2;
+      // Each G spins at a random rate; direction varies
+      rotSpeeds[i] = (Math.random() < 0.5 ? 1 : -1) * (0.02 + Math.random() * 0.06);
     };
 
     for (let i = 0; i < N; i++) initStar(i, true);
 
-    const starGeo = new THREE.BufferGeometry();
-    starGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    const starMat = new THREE.PointsMaterial({
-      color: navyColor, map: spriteTex, size: 0.22,
-      sizeAttenuation: true, transparent: true, opacity: 1,
-      depthWrite: false, alphaTest: 0.01, blending: THREE.AdditiveBlending,
+    const gGeo = new THREE.PlaneGeometry(1, 1);
+    const gMat = new THREE.MeshBasicMaterial({
+      map: gTex,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.NormalBlending,
     });
-    scene.add(new THREE.Points(starGeo, starMat));
+    const gMesh = new THREE.InstancedMesh(gGeo, gMat, N);
+    gMesh.frustumCulled = false;
+    scene.add(gMesh);
 
-    // Trail lines
-    const trailPos = new Float32Array(N * 6);
-    const trailGeo = new THREE.BufferGeometry();
-    trailGeo.setAttribute("position", new THREE.BufferAttribute(trailPos, 3));
-    const trailMat = new THREE.LineBasicMaterial({
-      color: navyDarkColor, transparent: true, opacity: 0.5,
-      depthWrite: false, blending: THREE.AdditiveBlending,
-    });
-    scene.add(new THREE.LineSegments(trailGeo, trailMat));
+    // Reusable objects for matrix composition
+    const _pos   = new THREE.Vector3();
+    const _quat  = new THREE.Quaternion();
+    const _scale = new THREE.Vector3();
+    const _mat   = new THREE.Matrix4();
+    const _axis  = new THREE.Vector3(0, 0, 1);
 
-    // ── Fog particles ─────────────────────────────────────────────────
+    // ── Fog particles (small dots) ────────────────────────────────────
     const N_FOG  = 250;
     const fogPos    = new Float32Array(N_FOG * 3);
     const fogSpeeds = new Float32Array(N_FOG);
@@ -189,7 +181,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const fogGeo = new THREE.BufferGeometry();
     fogGeo.setAttribute("position", new THREE.BufferAttribute(fogPos, 3));
     const fogMat = new THREE.PointsMaterial({
-      color: navyColor, map: spriteTex, size: 0.22,
+      map: gTex, size: 0.12,
       sizeAttenuation: true, transparent: true, opacity: 0,
       depthWrite: false, alphaTest: 0.01, blending: THREE.NormalBlending,
     });
@@ -214,81 +206,72 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       const progress = Math.min(elapsed / CANVAS_DURATION, 1);
       curProg = progress;
 
-      // ── Speed ──────────────────────────────────────────────────────
+      // Speed curve
       let speedMult: number;
       if (progress < PAUSE_START) {
-        speedMult = Math.pow(18, progress / PAUSE_START);           // 1× → 18×
+        speedMult = Math.pow(18, progress / PAUSE_START);
       } else if (progress < PAUSE_END) {
         const t = (progress - PAUSE_START) / (PAUSE_END - PAUSE_START);
-        speedMult = Math.pow(13.5, 1 - t) * Math.pow(0.025, t);     // 13.5× → 0.025×
+        speedMult = Math.pow(13.5, 1 - t) * Math.pow(0.025, t);
       } else {
         speedMult = 0.025;
       }
 
-      // ── Dark background opacity (div) ──────────────────────────────
-      // Phase 1: fully dark | Phase 2: fades with slowdown | Phase 3: gone
+      // Dark background fades with slowdown
       if (progress < PAUSE_START) {
         darkBg.style.opacity = "1";
       } else if (progress < PAUSE_END) {
         const t = (progress - PAUSE_START) / (PAUSE_END - PAUSE_START);
-        darkBg.style.opacity = String(Math.pow(9, 1-t) * Math.pow(0.025, t) / 9);
+        darkBg.style.opacity = String(Math.pow(13.5, 1-t) * Math.pow(0.025, t) / 13.5);
       } else {
         darkBg.style.opacity = "0";
       }
 
-      // ── Particle opacities (independent of background) ────────────
-      // Stars: full through phase 2, then smooth long fade in phase 3
+      // Particle opacity
       const starAlpha =
         progress < PAUSE_END
           ? 1
           : Math.pow(1 - (progress - PAUSE_END) / (1 - PAUSE_END), 0.55);
-      starMat.opacity  = starAlpha;
-      trailMat.opacity = starAlpha * 0.45;
+      gMat.opacity = starAlpha;
 
-      // Fog: fades in during slowdown, then fades out slowly with stars
       let fogAlpha: number;
       if (progress < PAUSE_START) {
         fogAlpha = 0;
       } else if (progress < PAUSE_END) {
         fogAlpha = ((progress - PAUSE_START) / (PAUSE_END - PAUSE_START)) * 0.38;
       } else {
-        const t = (progress - PAUSE_END) / (1 - PAUSE_END);
-        fogAlpha = 0.38 * Math.pow(1 - t, 0.55);
+        fogAlpha = 0.38 * Math.pow(1 - (progress - PAUSE_END) / (1 - PAUSE_END), 0.55);
       }
       fogMat.opacity = fogAlpha;
 
-      // ── Update stars ───────────────────────────────────────────────
+      // Update G instances
       for (let i = 0; i < N; i++) {
-        const idx  = i * 3;
-        const tidx = i * 6;
-        const dx   = speeds[i] * speedMult;
-        const tailZ = positions[idx+2] - dx * 12;
+        const dx = speeds[i] * speedMult;
 
-        trailPos[tidx]     = positions[idx];
-        trailPos[tidx + 1] = positions[idx+1];
-        trailPos[tidx + 2] = tailZ;
-        trailPos[tidx + 3] = positions[idx];
-        trailPos[tidx + 4] = positions[idx+1];
-        trailPos[tidx + 5] = positions[idx+2];
+        // Spin speed proportional to movement speed
+        rotAngles[i] += rotSpeeds[i] * (speedMult / 4 + 0.3);
 
-        positions[idx+2] += dx;
+        positions[i*3 + 2] += dx;
 
-        if (positions[idx+2] > 2) {
+        if (positions[i*3 + 2] > 2) {
           initStar(i, false);
-          trailPos[tidx+2] = positions[idx+2];
-          trailPos[tidx+5] = positions[idx+2];
         }
-      }
 
-      // ── Update fog ─────────────────────────────────────────────────
+        _pos.set(positions[i*3], positions[i*3 + 1], positions[i*3 + 2]);
+        _quat.setFromAxisAngle(_axis, rotAngles[i]);
+        // Size in world units — stays constant, camera perspective handles depth scaling
+        _scale.setScalar(0.9);
+        _mat.compose(_pos, _quat, _scale);
+        gMesh.setMatrixAt(i, _mat);
+      }
+      gMesh.instanceMatrix.needsUpdate = true;
+
+      // Update fog
       for (let i = 0; i < N_FOG; i++) {
-        fogPos[i*3+2] += fogSpeeds[i];
-        if (fogPos[i*3+2] > 2) initFog(i);
+        fogPos[i*3 + 2] += fogSpeeds[i];
+        if (fogPos[i*3 + 2] > 2) initFog(i);
       }
-
-      starGeo.attributes.position.needsUpdate  = true;
-      trailGeo.attributes.position.needsUpdate = true;
-      fogGeo.attributes.position.needsUpdate   = true;
+      fogGeo.attributes.position.needsUpdate = true;
 
       renderer.render(scene, camera);
 
@@ -322,13 +305,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0 }}
             >
-              {/* Dark background: fades out as page reveals */}
-              <div
-                ref={darkBgRef}
-                className="absolute inset-0"
-                style={{ backgroundColor: "#000005" }}
-              />
-              {/* Transparent canvas: only particles, no dark bg fighting fades */}
+              <div ref={darkBgRef} className="absolute inset-0" style={{ backgroundColor: "#000005" }} />
               <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
             </motion.div>
           )}
