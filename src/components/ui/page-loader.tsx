@@ -123,21 +123,32 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const starGeo = new THREE.BufferGeometry();
     starGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
+    // Read global CSS sage variable
+    const sageHex = getComputedStyle(document.documentElement)
+      .getPropertyValue("--sage").trim();        // e.g. "#a8b58c"
+    const sageColor  = new THREE.Color(sageHex);
+    const sageDeepHex = getComputedStyle(document.documentElement)
+      .getPropertyValue("--sage-deep").trim();
+    const sageDeepColor = new THREE.Color(sageDeepHex);
+
     // Circular sprite texture
     const spriteCanvas = document.createElement("canvas");
     spriteCanvas.width = 64;
     spriteCanvas.height = 64;
     const sc = spriteCanvas.getContext("2d")!;
     const grad = sc.createRadialGradient(32, 32, 0, 32, 32, 32);
-    grad.addColorStop(0,   "rgba(185,210,175,1)");
-    grad.addColorStop(0.4, "rgba(185,210,175,0.9)");
-    grad.addColorStop(1,   "rgba(185,210,175,0)");
+    const r = Math.round(sageColor.r * 255);
+    const g = Math.round(sageColor.g * 255);
+    const b = Math.round(sageColor.b * 255);
+    grad.addColorStop(0,   `rgba(${r},${g},${b},1)`);
+    grad.addColorStop(0.4, `rgba(${r},${g},${b},0.9)`);
+    grad.addColorStop(1,   `rgba(${r},${g},${b},0)`);
     sc.fillStyle = grad;
     sc.fillRect(0, 0, 64, 64);
     const spriteTex = new THREE.CanvasTexture(spriteCanvas);
 
     const starMat = new THREE.PointsMaterial({
-      color: 0xb9d2af,
+      color: sageColor,
       map: spriteTex,
       size: 0.22,
       sizeAttenuation: true,
@@ -156,7 +167,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     trailGeo.setAttribute("position", new THREE.BufferAttribute(trailPos, 3));
 
     const trailMat = new THREE.LineBasicMaterial({
-      color: 0x8fad85,
+      color: sageDeepColor,
       transparent: true,
       opacity: 0.5,
       depthWrite: false,
