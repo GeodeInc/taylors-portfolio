@@ -121,7 +121,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
         positions[i * 3 + 2] = z;
       } else {
         const angle = Math.random() * Math.PI * 2;
-        const r = Math.sqrt(Math.random()) * 70;
+        const r = Math.sqrt(Math.random()) * 110;
         positions[i * 3]     = Math.cos(angle) * r;
         positions[i * 3 + 1] = Math.sin(angle) * r;
         positions[i * 3 + 2] = randomZ ? -Math.random() * 180 : -180;
@@ -246,15 +246,16 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       const progress = Math.min(elapsed / CANVAS_DURATION, 1);
       currentProgress = progress;
 
-      // Phase 1: exponential acceleration
-      // Phase 2: abrupt stop → tiny drift (stars scattered, subtle movement)
-      // Phase 3: fade out
+      // Phase 1: exponential acceleration 1× → 18×
+      // Phase 2: abrupt snap to 50% (9×), then exponential decay → 0.025×
+      // Phase 3: gentle drift at 0.025×
       let speedMult: number;
       if (progress < PAUSE_START) {
         speedMult = Math.pow(18, progress / PAUSE_START);           // 1× → 18×
-      } else if (progress < PAUSE_START + 0.06) {
-        const t = (progress - PAUSE_START) / 0.06;
-        speedMult = 18 * Math.pow(1 - t, 3) + 0.025;              // snap to near-zero
+      } else if (progress < PAUSE_END) {
+        const t = (progress - PAUSE_START) / (PAUSE_END - PAUSE_START);
+        // Snap to 50% then exponential decay into pause
+        speedMult = Math.pow(9, 1 - t) * Math.pow(0.025, t);       // 9× → 0.025× exponentially
       } else {
         speedMult = 0.025;                                          // gentle drift
       }
