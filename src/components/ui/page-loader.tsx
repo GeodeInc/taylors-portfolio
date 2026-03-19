@@ -279,8 +279,13 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       }
       fogMat.opacity = fogAlpha;
 
-      // Canvas element opacity: page gradually reveals (power 4 = slow start)
-      canvas.style.opacity = String(Math.max(1 - Math.pow(progress, 4), 0));
+      // Canvas opacity: fully opaque during burst, fades during pause phase
+      if (progress < PAUSE_START) {
+        canvas.style.opacity = "1";
+      } else {
+        const t = (progress - PAUSE_START) / (PAUSE_END - PAUSE_START);
+        canvas.style.opacity = String(Math.max(1 - Math.pow(Math.min(t, 1), 1.5), 0));
+      }
 
       // Update star positions + build trail geometry
       for (let i = 0; i < N; i++) {
