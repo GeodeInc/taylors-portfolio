@@ -65,6 +65,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
   const [phase, setPhase] = useState<"wormhole" | "done">("wormhole");
   const rafRef   = useRef<number>(0);
   const startRef = useRef<number>(0);
+  const darkBgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (sessionStorage.getItem("intro-played")) {
@@ -91,7 +92,8 @@ export function PageLoader({ children }: { children?: ReactNode }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0 }}
             >
-              <WormholeCanvas onDone={handleDone} startRef={startRef} rafRef={rafRef} />
+              <div ref={darkBgRef} className="absolute inset-0" style={{ backgroundColor: "#000005" }} />
+              <WormholeCanvas onDone={handleDone} startRef={startRef} rafRef={rafRef} darkBgRef={darkBgRef} />
             </motion.div>
           )}
         </AnimatePresence>

@@ -11,11 +11,11 @@ interface Props {
   onDone: () => void;
   startRef: React.MutableRefObject<number>;
   rafRef:   React.MutableRefObject<number>;
+  darkBgRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export default function WormholeCanvas({ onDone, startRef, rafRef }: Props) {
+export default function WormholeCanvas({ onDone, startRef, rafRef, darkBgRef }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const darkBgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -223,9 +223,6 @@ export default function WormholeCanvas({ onDone, startRef, rafRef }: Props) {
   }, [onDone, startRef, rafRef]);
 
   return (
-    <>
-      <div ref={darkBgRef} className="absolute inset-0" style={{ backgroundColor: "#000005" }} />
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-    </>
+    <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
   );
 }
