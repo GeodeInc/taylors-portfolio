@@ -131,22 +131,22 @@ export function PageLoader({ children }: { children?: ReactNode }) {
 
     for (let i = 0; i < N; i++) initStar(i, true);
 
-    // ── Fog particles (tiny, slow, dense cloud) ───────────────────────
-    const N_FOG = 200;
+    // ── Fog particles — uniform screen-space scatter ──────────────────
+    const N_FOG = 500;
     const fogPos    = new Float32Array(N_FOG * 3);
     const fogSpeeds = new Float32Array(N_FOG);
 
-    const tanHalfFov = Math.tan((75 / 2) * Math.PI / 180);
-    const aspect = W / H;
+    const fogTan = Math.tan((75 / 2) * Math.PI / 180);
+    const fogAspect = W / H;
 
-    const initFog = (i: number, randomZ = true) => {
-      const z = randomZ ? -(1 + Math.random() * 20) : -(1 + Math.random() * 20);
-      const halfW = Math.abs(z) * tanHalfFov;
-      const halfH = halfW / aspect;
+    const initFog = (i: number) => {
+      const z = -(3 + Math.random() * 5);
+      const halfW = Math.abs(z) * fogTan;
+      const halfH = halfW / fogAspect;
       fogPos[i * 3]     = (Math.random() * 2 - 1) * halfW;
       fogPos[i * 3 + 1] = (Math.random() * 2 - 1) * halfH;
       fogPos[i * 3 + 2] = z;
-      fogSpeeds[i] = 0.008 + Math.random() * 0.018;
+      fogSpeeds[i] = 0.003 + Math.random() * 0.006;
     };
 
     for (let i = 0; i < N_FOG; i++) initFog(i);
@@ -215,13 +215,13 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const fogMat = new THREE.PointsMaterial({
       color: sageColor,
       map: spriteTex,
-      size: 0.18,
+      size: 0.22,
       sizeAttenuation: true,
       transparent: true,
       opacity: 0.35,
       depthWrite: false,
-      alphaTest: 0.005,
-      blending: THREE.AdditiveBlending,
+      alphaTest: 0.01,
+      blending: THREE.NormalBlending,
     });
     const fogPoints = new THREE.Points(fogGeo, fogMat);
     scene.add(fogPoints);
@@ -314,7 +314,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       // Update fog particles — always slow drift, wrap at camera
       for (let i = 0; i < N_FOG; i++) {
         fogPos[i * 3 + 2] += fogSpeeds[i];
-        if (fogPos[i * 3 + 2] > 2) initFog(i, false);
+        if (fogPos[i * 3 + 2] > 2) initFog(i);
       }
 
       starGeo.attributes.position.needsUpdate  = true;
