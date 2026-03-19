@@ -8,7 +8,7 @@ import * as THREE from "three";
 // Phase 1: 0–2s  burst (exponential accel)
 // Phase 2: 2–3s  slowdown + page fades in
 // Phase 3: 3–6s  particles fade out over page
-const CANVAS_DURATION = 6000;
+const CANVAS_DURATION = 4500;
 const PAUSE_START = 2000 / CANVAS_DURATION; // 0.333
 const PAUSE_END   = 3000 / CANVAS_DURATION; // 0.500
 
@@ -220,7 +220,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
         speedMult = Math.pow(18, progress / PAUSE_START);           // 1× → 18×
       } else if (progress < PAUSE_END) {
         const t = (progress - PAUSE_START) / (PAUSE_END - PAUSE_START);
-        speedMult = Math.pow(9, 1 - t) * Math.pow(0.025, t);       // 9× → 0.025×
+        speedMult = Math.pow(13.5, 1 - t) * Math.pow(0.025, t);     // 13.5× → 0.025×
       } else {
         speedMult = 0.025;
       }
