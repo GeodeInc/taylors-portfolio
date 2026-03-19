@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import * as THREE from "three";
 
-const CANVAS_DURATION = 4000;
-const PAUSE_START = 0.50;  // 2s — stars abruptly decelerate to near-stop
-const PAUSE_END   = 0.75;  // 3s — drift window ends, stars + page fade together
+const CANVAS_DURATION = 5000;
+const PAUSE_START = 0.40;  // 2s — stars abruptly decelerate to near-stop
+const PAUSE_END   = 0.60;  // 3s — drift window ends, stars begin fading (2s fadeout)
 // page canvas opacity fades throughout (power 4 curve)
 
 const NAV_TAGS = [
@@ -264,7 +264,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       const starAlpha =
         progress < PAUSE_END
           ? 1
-          : Math.pow(1 - (progress - PAUSE_END) / (1 - PAUSE_END), 0.4);
+          : Math.pow(1 - (progress - PAUSE_END) / (1 - PAUSE_END), 0.6);
       starMat.opacity  = starAlpha;
       trailMat.opacity = starAlpha * 0.5;
       // Fog appears when stars pause, lingers longer than stars
@@ -279,15 +279,15 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       }
       fogMat.opacity = fogAlpha;
 
-      // Canvas opacity mirrors the speed slowdown curve exactly
+      // Canvas opacity: opaque during burst, mirrors slowdown during phase 2,
+      // then follows starAlpha in phase 3 so particles fade smoothly with background
       if (progress < PAUSE_START) {
         canvas.style.opacity = "1";
       } else if (progress < PAUSE_END) {
         const t = (progress - PAUSE_START) / (PAUSE_END - PAUSE_START);
-        // Same exponential decay as speed: 9x→0.025x, normalized to 1→0
         canvas.style.opacity = String(Math.pow(9, 1 - t) * Math.pow(0.025, t) / 9);
       } else {
-        canvas.style.opacity = "0";
+        canvas.style.opacity = String(starAlpha);
       }
 
       // Update star positions + build trail geometry
