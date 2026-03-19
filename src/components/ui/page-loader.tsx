@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 const CANVAS_DURATION = 3000;
@@ -14,41 +14,6 @@ const NAV_TAGS = [
   { id: "contact", label: "Contact" },
 ];
 
-const X_BASES = [-180, -90, 0, 90, 180];
-
-function NavTag({
-  tag,
-  xBase,
-  yOffset,
-  originY,
-  index,
-}: {
-  tag: { id: string; label: string };
-  xBase: number;
-  yOffset: number;
-  originY: number;
-  index: number;
-}) {
-  return (
-    <motion.a
-      href={`#${tag.id}`}
-      className="absolute rounded-full border px-5 py-2 text-sm font-medium pointer-events-auto whitespace-nowrap"
-      style={{
-        fontFamily: "var(--font-sub)",
-        borderColor: "var(--navy-border)",
-        backgroundColor: "var(--navy-fill-sm)",
-        color: "var(--navy)",
-      }}
-      initial={{ x: 0, y: originY, opacity: 0, scale: 0.5 }}
-      animate={{ x: xBase, y: yOffset, opacity: 1, scale: 1 }}
-      transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.8, delay: index * 0.1 }}
-      whileHover={{ y: yOffset - 5, scale: 1.07, transition: { type: "spring", stiffness: 200, damping: 18 } }}
-    >
-      {tag.label}
-    </motion.a>
-  );
-}
-
 function ScatteredNav() {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -58,34 +23,38 @@ function ScatteredNav() {
 
   useMotionValueEvent(scrollYProgress, "change", (current) => {
     const prev = scrollYProgress.getPrevious() ?? 0;
-    if (current < 0.05) {
-      setVisible(true);
-    } else if (current - prev > 0) {
-      setVisible(false);
-    } else {
-      setVisible(true);
-    }
+    if (current < 0.05) setVisible(true);
+    else if (current - prev > 0) setVisible(false);
+    else setVisible(true);
   });
-
-  const yOffsets = useMemo(
-    () => NAV_TAGS.map(() => (Math.random() - 0.5) * 30),
-    []
-  );
-  const originY = typeof window !== "undefined" ? window.innerHeight / 2 - 88 : 300;
 
   if (!mounted) return null;
 
   return (
     <motion.div
-      animate={{ y: visible ? 0 : -100, opacity: visible ? 1 : 0 }}
+      animate={{ y: visible ? 0 : -80, opacity: visible ? 1 : 0 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed top-12 left-0 right-0 z-[5000] flex items-center justify-center pointer-events-none"
+      className="fixed top-4 right-4 z-[5000] flex items-center gap-1 sm:gap-2 pointer-events-auto"
     >
-      <div className="relative flex items-center justify-center w-full h-20">
-        {NAV_TAGS.map((tag, i) => (
-          <NavTag key={tag.id} tag={tag} xBase={X_BASES[i]} yOffset={yOffsets[i]} originY={originY} index={i} />
-        ))}
-      </div>
+      {NAV_TAGS.map((tag, i) => (
+        <motion.a
+          key={tag.id}
+          href={`#${tag.id}`}
+          className="rounded-full border px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-medium whitespace-nowrap"
+          style={{
+            fontFamily: "var(--font-sub)",
+            borderColor: "var(--navy-border)",
+            backgroundColor: "var(--navy-fill-sm)",
+            color: "var(--navy)",
+          }}
+          initial={{ x: 30, opacity: 0, scale: 0.85 }}
+          animate={{ x: 0, opacity: 1, scale: 1 }}
+          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.6, delay: i * 0.08 }}
+          whileHover={{ y: -3, scale: 1.07, transition: { type: "spring", stiffness: 200, damping: 18 } }}
+        >
+          {tag.label}
+        </motion.a>
+      ))}
     </motion.div>
   );
 }
