@@ -194,7 +194,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const fogMat = new THREE.PointsMaterial({
       color: sageColor,
       map: spriteTex,
-      size: 0.07,
+      size: 0.18,
       sizeAttenuation: true,
       transparent: true,
       opacity: 0.35,
