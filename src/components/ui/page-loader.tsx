@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "framer-
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-const CANVAS_DURATION = 3000;
+const CANVAS_DURATION = 3500;
 
 const NAV_TAGS = [
   { id: "home", label: "Home" },
@@ -94,28 +94,29 @@ const rafRef = useRef<number>(0);
       const H0 = canvas.height;
       const maxR0 = Math.sqrt((W0 / 2) ** 2 + (H0 / 2) ** 2) * 1.1;
 
-      // Dense background stars — tiny, fast dots, no trail
-      type BGStar = { a: number; dist: number; spd: number; sz: number; al: number };
-      const bgStars: BGStar[] = Array.from({ length: 2200 }, () => ({
-        a: Math.random() * Math.PI * 2,
-        dist: 8 + Math.random() * maxR0,
-        spd: 0.5 + Math.random() * 1.0,
-        sz: 0.35 + Math.random() * 0.65,
-        al: 0.4 + Math.random() * 0.6,
-      }));
+      type Star = { a: number; dist: number; spd: number; sz: number; al: number; streak: boolean };
+      const stars: Star[] = [
+        // 3500 dense background dots
+        ...Array.from({ length: 3500 }, () => ({
+          a: Math.random() * Math.PI * 2,
+          dist: 12 + Math.random() * maxR0,
+          spd: 0.5 + Math.random() * 1.1,
+          sz: 0.3 + Math.random() * 0.65,
+          al: 0.45 + Math.random() * 0.55,
+          streak: false,
+        })),
+        // 250 larger streak stars with trails
+        ...Array.from({ length: 250 }, () => ({
+          a: Math.random() * Math.PI * 2,
+          dist: 12 + Math.random() * maxR0,
+          spd: 1.5 + Math.random() * 2.8,
+          sz: 0.9 + Math.random() * 2.2,
+          al: 0.6 + Math.random() * 0.4,
+          streak: true,
+        })),
+      ];
 
-      // Streak stars — fewer but larger, with long radial trails
-      type StreakStar = { a: number; dist: number; spd: number; sz: number; al: number };
-      const streakStars: StreakStar[] = Array.from({ length: 180 }, () => ({
-        a: Math.random() * Math.PI * 2,
-        dist: 10 + Math.random() * maxR0,
-        spd: 1.2 + Math.random() * 2.2,
-        sz: 0.8 + Math.random() * 2.0,
-        al: 0.55 + Math.random() * 0.45,
-      }));
-
-      // Opaque first frame
-      ctx.fillStyle = "#020204";
+      ctx.fillStyle = "#010103";
       ctx.fillRect(0, 0, W0, H0);
 
       startTimeRef.current = performance.now();
@@ -130,111 +131,108 @@ const rafRef = useRef<number>(0);
         const cy = H / 2;
         const maxR = Math.sqrt(cx * cx + cy * cy) * 1.1;
 
-        // Ease: slow start → violent middle → snap end
-        const eased = progress < 0.5
-          ? 4 * progress * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        // Slow start → fast middle → snap: power 2.8 gives aggressive late acceleration
+        const eased = Math.pow(progress, 2.8);
         const circleR = maxR * eased;
 
-        // Acceleration multiplier
-        const accel = 1 + Math.pow(progress, 2) * 9;
-        const spiral = 0.0012 + progress * 0.004;
+        // Acceleration: starts at 1×, hits 12× near end
+        const accel = 1 + Math.pow(progress, 1.6) * 11;
+        // Spiral rotation speeds up with progress
+        const spiral = 0.001 + progress * 0.006;
 
-        // Motion blur persistence — semi-transparent fill leaves ghost trails
-        ctx.fillStyle = "rgba(2,2,4,0.75)";
+        // Motion blur: leave ghost trails via semi-transparent overlay
+        ctx.fillStyle = "rgba(1,1,3,0.72)";
         ctx.fillRect(0, 0, W, H);
 
-        // --- Dense background stars (dots only, no trail) ---
-        for (const s of bgStars) {
-          s.a += spiral * 0.6;
+        // ── Stars: all move inward toward focal center ──
+        for (const s of stars) {
+          s.a += spiral * (s.streak ? 1.0 : 0.55);
           s.dist -= s.spd * accel;
-          if (s.dist <= circleR + 2 || s.dist <= 1) {
-            s.dist = maxR * (0.5 + Math.random() * 0.5);
-            s.a = Math.random() * Math.PI * 2;
-            continue;
-          }
-          const depth = s.dist / maxR; // 0=center(far), 1=edge(close)
-          const proximity = s.dist - circleR;
-          const fa = s.al * Math.min(proximity / 35, 1) * (0.15 + 0.85 * depth);
-          if (fa < 0.03) continue;
-          const x = cx + Math.cos(s.a) * s.dist;
-          const y = cy + Math.sin(s.a) * s.dist;
-          ctx.beginPath();
-          ctx.arc(x, y, s.sz * (0.08 + 0.92 * depth * depth), 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(235,238,255,${fa})`;
-          ctx.fill();
-        }
 
-        // --- Streak stars (radial trails toward center = behind direction of travel) ---
-        for (const s of streakStars) {
-          s.a += spiral;
-          s.dist -= s.spd * accel;
-          if (s.dist <= circleR + 4 || s.dist <= 1) {
-            s.dist = maxR * (0.3 + Math.random() * 0.7);
+          if (s.dist <= circleR + 3 || s.dist <= 1) {
+            s.dist = maxR * (0.45 + Math.random() * 0.55);
             s.a = Math.random() * Math.PI * 2;
             continue;
           }
+
+          // depth: 0 = near center (far/small), 1 = near edge (close/large)
           const depth = s.dist / maxR;
-          const depth2 = depth * depth; // quadratic — more dramatic perspective
+          const d2 = depth * depth;
           const proximity = s.dist - circleR;
-          const fa = s.al * Math.min(proximity / 55, 1) * (0.05 + 0.95 * depth2);
-          if (fa < 0.04) continue;
+          const fa = s.al * Math.min(proximity / 40, 1) * (0.08 + 0.92 * d2);
+          if (fa < 0.025) continue;
 
           const x = cx + Math.cos(s.a) * s.dist;
           const y = cy + Math.sin(s.a) * s.dist;
-          const sz = s.sz * (0.1 + 0.9 * depth2);
+          const sz = s.sz * (0.06 + 0.94 * d2);
 
-          // Trail points toward center (outward = behind particle moving inward)
-          const trailLen = Math.min(s.spd * accel * depth * 28 + 4, maxR * 0.35);
-          const tx = cx + Math.cos(s.a) * (s.dist + trailLen);
-          const ty = cy + Math.sin(s.a) * (s.dist + trailLen);
+          if (s.streak) {
+            // Radial trail pointing away from center (tail behind inward movement)
+            const trailLen = Math.min(s.spd * accel * depth * 32 + 3, maxR * 0.4);
+            const tx = cx + Math.cos(s.a) * (s.dist + trailLen);
+            const ty = cy + Math.sin(s.a) * (s.dist + trailLen);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(tx, ty);
+            ctx.strokeStyle = `rgba(210,220,255,${fa * 0.5})`;
+            ctx.lineWidth = sz * 0.5;
+            ctx.stroke();
+          }
 
           ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.lineTo(tx, ty);
-          ctx.strokeStyle = `rgba(220,228,255,${fa * 0.55})`;
-          ctx.lineWidth = sz * 0.55;
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.arc(x, y, sz * 0.7, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(245,248,255,${fa})`;
+          ctx.arc(x, y, Math.max(sz * 0.7, 0.3), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(240,244,255,${fa})`;
           ctx.fill();
         }
 
-        // --- Perspective tunnel lines: converging radial lines from center ---
-        const NUM_LINES = 28;
-        for (let i = 0; i < NUM_LINES; i++) {
-          const lineAngle = (i / NUM_LINES) * Math.PI * 2 + progress * 0.3;
-          const innerR = circleR + maxR * 0.02;
-          const outerR = maxR * (0.85 + 0.15 * Math.sin(i * 1.7));
-          const lineA = 0.06 + 0.04 * Math.abs(Math.sin(i * 2.1 + progress * 4));
+        // ── Tunnel rings: concentric circles that contract toward center ──
+        for (let i = 0; i < 7; i++) {
+          // Each ring moves inward; stagger their phases
+          const phase = ((progress * 2.5 + i / 7) % 1);
+          const ringR = circleR + (maxR - circleR) * (1 - phase);
+          if (ringR <= circleR + 2) continue;
+          const ringA = 0.12 * Math.sin(phase * Math.PI); // fade in+out
           ctx.beginPath();
-          ctx.moveTo(cx + Math.cos(lineAngle) * innerR, cy + Math.sin(lineAngle) * innerR);
-          ctx.lineTo(cx + Math.cos(lineAngle) * outerR, cy + Math.sin(lineAngle) * outerR);
-          ctx.strokeStyle = `rgba(180,190,255,${lineA})`;
-          ctx.lineWidth = 0.6;
+          ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(160,175,255,${ringA})`;
+          ctx.lineWidth = 0.8;
           ctx.stroke();
         }
 
-        // --- Center glow: bright light at end of tunnel ---
-        const glowR = Math.max(circleR * 0.9, maxR * 0.06);
+        // ── Radial convergence lines from outer edge to circle rim ──
+        const nLines = 32;
+        for (let i = 0; i < nLines; i++) {
+          const ang = (i / nLines) * Math.PI * 2 + progress * 0.5;
+          const innerR = circleR + 2;
+          const outerR = maxR * 0.9;
+          if (outerR <= innerR) continue;
+          const la = 0.045 + 0.03 * Math.sin(i * 1.3 + progress * 6);
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(ang) * innerR, cy + Math.sin(ang) * innerR);
+          ctx.lineTo(cx + Math.cos(ang) * outerR, cy + Math.sin(ang) * outerR);
+          ctx.strokeStyle = `rgba(140,160,255,${la})`;
+          ctx.lineWidth = 0.55;
+          ctx.stroke();
+        }
+
+        // ── Center focal glow (bright at start, fades as circle opens) ──
+        const glowR = Math.max(circleR + maxR * 0.08, maxR * 0.12);
         const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
-        glow.addColorStop(0, `rgba(160,180,255,${0.35 * (1 - progress)})`);
-        glow.addColorStop(0.4, `rgba(100,130,255,${0.15 * (1 - progress)})`);
-        glow.addColorStop(1, "rgba(0,0,0,0)");
+        glow.addColorStop(0,   `rgba(180,200,255,${0.45 * (1 - eased)})`);
+        glow.addColorStop(0.35,`rgba(100,130,255,${0.18 * (1 - eased)})`);
+        glow.addColorStop(1,   "rgba(0,0,0,0)");
         ctx.fillStyle = glow;
         ctx.fillRect(0, 0, W, H);
 
-        // --- Outer vignette ---
-        const vig = ctx.createRadialGradient(cx, cy, maxR * 0.3, cx, cy, maxR);
-        vig.addColorStop(0, "rgba(0,0,0,0)");
-        vig.addColorStop(0.6, "rgba(0,0,0,0)");
-        vig.addColorStop(1, "rgba(0,0,0,0.92)");
+        // ── Outer vignette ──
+        const vig = ctx.createRadialGradient(cx, cy, maxR * 0.28, cx, cy, maxR);
+        vig.addColorStop(0,   "rgba(0,0,0,0)");
+        vig.addColorStop(0.55,"rgba(0,0,0,0)");
+        vig.addColorStop(1,   "rgba(0,0,0,0.94)");
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, W, H);
 
-        // --- Destination-out: reveal page through expanding circle ---
+        // ── Destination-out: punch hole → page shows through ──
         ctx.save();
         ctx.globalCompositeOperation = "destination-out";
         ctx.beginPath();
@@ -271,7 +269,7 @@ const rafRef = useRef<number>(0);
             <motion.div
               className="fixed inset-0 z-[9999] overflow-hidden"
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.45, ease: "easeIn" }}
+              transition={{ duration: 0.6, ease: [0.4, 0, 1, 1] }}
             >
               <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
             </motion.div>
