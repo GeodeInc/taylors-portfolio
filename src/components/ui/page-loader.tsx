@@ -212,7 +212,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       // Canvas element opacity: reveals page underneath
       if (progress >= FADE_START) {
         const t = (progress - FADE_START) / (1 - FADE_START);
-        canvas.style.opacity = String(Math.max(1 - Math.pow(t, 2), 0));
+        canvas.style.opacity = String(Math.max(1 - Math.pow(t, 4), 0));
       }
 
       // Update star positions + build trail geometry
