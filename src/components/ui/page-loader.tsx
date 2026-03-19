@@ -10,7 +10,7 @@ import * as THREE from "three";
 // Phase 3: 3–6s  particles fade out over page
 const CANVAS_DURATION = 4500;
 const PAUSE_START = 2000 / CANVAS_DURATION; // 0.333
-const PAUSE_END   = 3000 / CANVAS_DURATION; // 0.500
+const PAUSE_END   = 2500 / CANVAS_DURATION; // 0.556
 
 const NAV_TAGS = [
   { id: "home",     label: "Home"     },
