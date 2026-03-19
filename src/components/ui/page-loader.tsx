@@ -141,7 +141,7 @@ const rafRef = useRef<number>(0);
         const spiral = 0.001 + progress * 0.006;
 
         // Motion blur: leave ghost trails via semi-transparent overlay
-        ctx.fillStyle = "rgba(1,1,3,0.72)";
+        ctx.fillStyle = "rgba(1,1,3,0.55)";
         ctx.fillRect(0, 0, W, H);
 
         // ── Stars: all move inward toward focal center ──
@@ -159,12 +159,12 @@ const rafRef = useRef<number>(0);
           const depth = s.dist / maxR;
           const d2 = depth * depth;
           const proximity = s.dist - circleR;
-          const fa = s.al * Math.min(proximity / 40, 1) * (0.08 + 0.92 * d2);
-          if (fa < 0.025) continue;
+          const fa = s.al * Math.min(proximity / 40, 1) * (0.25 + 0.75 * depth);
+          if (fa < 0.02) continue;
 
           const x = cx + Math.cos(s.a) * s.dist;
           const y = cy + Math.sin(s.a) * s.dist;
-          const sz = s.sz * (0.06 + 0.94 * d2);
+          const sz = s.sz * (0.2 + 0.8 * d2);
 
           if (s.streak) {
             // Radial trail pointing away from center (tail behind inward movement)
@@ -215,12 +215,13 @@ const rafRef = useRef<number>(0);
           ctx.stroke();
         }
 
-        // ── Center focal glow (bright at start, fades as circle opens) ──
-        const glowR = Math.max(circleR + maxR * 0.08, maxR * 0.12);
+        // ── Center focal glow (bright throughout, fades as circle opens) ──
+        const glowR = Math.max(circleR + maxR * 0.18, maxR * 0.22);
         const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
-        glow.addColorStop(0,   `rgba(180,200,255,${0.45 * (1 - eased)})`);
-        glow.addColorStop(0.35,`rgba(100,130,255,${0.18 * (1 - eased)})`);
-        glow.addColorStop(1,   "rgba(0,0,0,0)");
+        glow.addColorStop(0,    `rgba(210,225,255,${0.7 * (1 - eased * 0.7)})`);
+        glow.addColorStop(0.15, `rgba(160,185,255,${0.45 * (1 - eased * 0.7)})`);
+        glow.addColorStop(0.4,  `rgba(80,110,255,${0.18 * (1 - eased * 0.7)})`);
+        glow.addColorStop(1,    "rgba(0,0,0,0)");
         ctx.fillStyle = glow;
         ctx.fillRect(0, 0, W, H);
 
