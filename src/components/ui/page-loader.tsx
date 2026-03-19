@@ -7,7 +7,7 @@ import * as THREE from "three";
 
 const CANVAS_DURATION = 3000;
 const FADE_START = 0.0;    // canvas overlay begins revealing page immediately
-const SLOW_START = 0.70;   // stars abruptly decelerate + fade
+const SLOW_START = 0.88;   // stars abruptly decelerate + fade
 
 const NAV_TAGS = [
   { id: "home", label: "Home" },
