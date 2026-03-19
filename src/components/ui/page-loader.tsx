@@ -123,7 +123,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const spriteTex = new THREE.CanvasTexture(sp);
 
     // ── Main stars ────────────────────────────────────────────────────
-    const N = 3000;
+    const N = 1800;
     const positions = new Float32Array(N * 3);
     const speeds    = new Float32Array(N);
     let   curProg   = 0;
@@ -171,7 +171,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     scene.add(new THREE.LineSegments(trailGeo, trailMat));
 
     // ── Fog particles ─────────────────────────────────────────────────
-    const N_FOG  = 500;
+    const N_FOG  = 250;
     const fogPos    = new Float32Array(N_FOG * 3);
     const fogSpeeds = new Float32Array(N_FOG);
 
