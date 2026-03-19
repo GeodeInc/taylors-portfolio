@@ -61,14 +61,15 @@ function ScatteredNav() {
 }
 
 export function PageLoader({ children }: { children?: ReactNode }) {
-  const [show,  setShow]  = useState(false);
+  const [show,  setShow]  = useState(true);
   const [phase, setPhase] = useState<"wormhole" | "done">("wormhole");
   const rafRef   = useRef<number>(0);
   const startRef = useRef<number>(0);
 
   useEffect(() => {
-    if (!sessionStorage.getItem("intro-played")) {
-      setShow(true);
+    if (sessionStorage.getItem("intro-played")) {
+      setShow(false);
+    } else {
       sessionStorage.setItem("intro-played", "1");
     }
   }, []);
