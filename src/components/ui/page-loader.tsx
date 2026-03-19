@@ -85,6 +85,9 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     if (!canvas || !darkBg) return;
 
     let alive = true;
+    let cleanup = () => {};
+
+    (async () => {
     const W = window.innerWidth;
     const H = window.innerHeight;
 
@@ -98,16 +101,10 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     camera.position.z = 0;
 
     // ── G sprite texture ──────────────────────────────────────────────
-    const gCanvas = document.createElement("canvas");
-    gCanvas.width = gCanvas.height = 128;
-    const gCtx = gCanvas.getContext("2d")!;
-    gCtx.clearRect(0, 0, 128, 128);
-    gCtx.fillStyle = "white";
-    gCtx.font = '88px "Fredoka One", "Fredoka", sans-serif';
-    gCtx.textAlign = "center";
-    gCtx.textBaseline = "middle";
-    gCtx.fillText("G", 64, 68);
-    const gTex = new THREE.CanvasTexture(gCanvas);
+    const gTex = await new Promise<THREE.Texture>((resolve) => {
+      new THREE.TextureLoader().load("/G-sprite.png", resolve);
+    });
+    if (!alive) { gTex.dispose(); renderer.dispose(); return; }
 
     // ── Stars as spinning G's (InstancedMesh) ─────────────────────────
     const N       = 1800;
@@ -285,11 +282,16 @@ export function PageLoader({ children }: { children?: ReactNode }) {
 
     rafRef.current = requestAnimationFrame(draw);
 
-    return () => {
-      alive = false;
+    cleanup = () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", onResize);
       renderer.dispose();
+    };
+    })();
+
+    return () => {
+      alive = false;
+      cleanup();
     };
   }, [show, phase]);
 
