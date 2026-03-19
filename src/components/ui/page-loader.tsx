@@ -160,7 +160,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     const _axis  = new THREE.Vector3(0, 0, 1);
 
     // ── Fog G's (InstancedMesh, size varies: big at center, small at edges) ──
-    const N_FOG     = 45;
+    const N_FOG     = 20;
     const fogPos    = new Float32Array(N_FOG * 3);
     const fogSpeeds = new Float32Array(N_FOG);
     const fogScales = new Float32Array(N_FOG); // per-particle world-unit scale
@@ -177,8 +177,8 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       fogSpeeds[i] = 0.003 + Math.random() * 0.006;
       // Normalised distance from screen centre (0=centre, 1=edge)
       const dist = Math.sqrt((x/hw)**2 + (y/hh)**2);
-      // Centre: 0.12–0.22  |  Edge: 0.03–0.07
-      fogScales[i] = 0.03 + (1 - dist) * 0.16 + Math.random() * 0.04;
+      // Centre: 0.06–0.10  |  Edge: 0.02–0.04
+      fogScales[i] = 0.02 + (1 - dist) * 0.07 + Math.random() * 0.02;
     };
     for (let i = 0; i < N_FOG; i++) initFog(i);
 
@@ -263,7 +263,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
         _pos.set(positions[i*3], positions[i*3 + 1], positions[i*3 + 2]);
         _quat.setFromAxisAngle(_axis, rotAngles[i]);
         // Size in world units — stays constant, camera perspective handles depth scaling
-        _scale.setScalar(0.9);
+        _scale.setScalar(0.14);
         _mat.compose(_pos, _quat, _scale);
         gMesh.setMatrixAt(i, _mat);
       }
