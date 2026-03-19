@@ -129,15 +129,15 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     spriteCanvas.height = 64;
     const sc = spriteCanvas.getContext("2d")!;
     const grad = sc.createRadialGradient(32, 32, 0, 32, 32, 32);
-    grad.addColorStop(0,   "rgba(255,253,248,1)");
-    grad.addColorStop(0.4, "rgba(255,253,248,0.9)");
-    grad.addColorStop(1,   "rgba(255,253,248,0)");
+    grad.addColorStop(0,   "rgba(185,210,175,1)");
+    grad.addColorStop(0.4, "rgba(185,210,175,0.9)");
+    grad.addColorStop(1,   "rgba(185,210,175,0)");
     sc.fillStyle = grad;
     sc.fillRect(0, 0, 64, 64);
     const spriteTex = new THREE.CanvasTexture(spriteCanvas);
 
     const starMat = new THREE.PointsMaterial({
-      color: 0xfffdf8,
+      color: 0xb9d2af,
       map: spriteTex,
       size: 0.22,
       sizeAttenuation: true,
@@ -156,7 +156,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     trailGeo.setAttribute("position", new THREE.BufferAttribute(trailPos, 3));
 
     const trailMat = new THREE.LineBasicMaterial({
-      color: 0xfaf6ee,
+      color: 0x8fad85,
       transparent: true,
       opacity: 0.5,
       depthWrite: false,
