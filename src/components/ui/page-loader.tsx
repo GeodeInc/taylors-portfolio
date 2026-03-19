@@ -279,12 +279,15 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       }
       fogMat.opacity = fogAlpha;
 
-      // Canvas opacity: opaque during burst+deceleration, fades with particles in phase 3
-      if (progress < PAUSE_END) {
+      // Canvas opacity mirrors the speed slowdown curve exactly
+      if (progress < PAUSE_START) {
         canvas.style.opacity = "1";
+      } else if (progress < PAUSE_END) {
+        const t = (progress - PAUSE_START) / (PAUSE_END - PAUSE_START);
+        // Same exponential decay as speed: 9x→0.025x, normalized to 1→0
+        canvas.style.opacity = String(Math.pow(9, 1 - t) * Math.pow(0.025, t) / 9);
       } else {
-        const t = (progress - PAUSE_END) / (1 - PAUSE_END);
-        canvas.style.opacity = String(Math.max(1 - Math.pow(t, 0.4), 0));
+        canvas.style.opacity = "0";
       }
 
       // Update star positions + build trail geometry
