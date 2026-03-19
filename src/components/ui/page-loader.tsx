@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import * as THREE from "three";
+import type * as THREE_TYPES from "three";
 
 const CANVAS_DURATION = 4500;
 const PAUSE_START = 2000 / CANVAS_DURATION;
@@ -88,6 +88,9 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     let cleanup = () => {};
 
     (async () => {
+    const THREE = await import("three") as typeof THREE_TYPES;
+    if (!alive) return;
+
     const W = window.innerWidth;
     const H = window.innerHeight;
 
@@ -101,7 +104,7 @@ export function PageLoader({ children }: { children?: ReactNode }) {
     camera.position.z = 0;
 
     // ── G sprite texture ──────────────────────────────────────────────
-    const gTex = await new Promise<THREE.Texture>((resolve) => {
+    const gTex = await new Promise<THREE_TYPES.Texture>((resolve) => {
       new THREE.TextureLoader().load("/G-sprite.png", resolve);
     });
     if (!alive) { gTex.dispose(); renderer.dispose(); return; }
