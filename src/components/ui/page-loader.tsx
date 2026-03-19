@@ -5,9 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import * as THREE from "three";
 
-const CANVAS_DURATION = 3000;
-const FADE_START = 0.0;    // canvas overlay begins revealing page immediately
-const SLOW_START = 0.88;   // stars abruptly decelerate + fade
+const CANVAS_DURATION = 4000;
+const PAUSE_START = 0.58;  // stars abruptly decelerate to near-stop
+const PAUSE_END   = 0.72;  // drift window ends, stars begin fading
+// page canvas opacity fades throughout (power 4 curve)
 
 const NAV_TAGS = [
   { id: "home", label: "Home" },
@@ -194,26 +195,29 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       const elapsed = now - startTimeRef.current;
       const progress = Math.min(elapsed / CANVAS_DURATION, 1);
 
-      // Speed curve: true exponential acceleration → abrupt snap to slow
+      // Phase 1: exponential acceleration
+      // Phase 2: abrupt stop → tiny drift (stars scattered, subtle movement)
+      // Phase 3: fade out
       let speedMult: number;
-      if (progress < SLOW_START) {
-        speedMult = Math.pow(18, progress / SLOW_START);            // 1× → 18× exponentially
+      if (progress < PAUSE_START) {
+        speedMult = Math.pow(18, progress / PAUSE_START);           // 1× → 18×
+      } else if (progress < PAUSE_START + 0.06) {
+        const t = (progress - PAUSE_START) / 0.06;
+        speedMult = 18 * Math.pow(1 - t, 3) + 0.025;              // snap to near-zero
       } else {
-        const t = (progress - SLOW_START) / (1 - SLOW_START);
-        speedMult = 18 * Math.pow(1 - t, 3);                       // sharp drop to 0
+        speedMult = 0.025;                                          // gentle drift
       }
 
-      // Star + trail opacity: fade in final stretch
+      // Star opacity: full until PAUSE_END, then fade out
       const starAlpha =
-        progress < SLOW_START ? 1 : Math.pow(1 - (progress - SLOW_START) / (1 - SLOW_START), 1.5);
+        progress < PAUSE_END
+          ? 1
+          : Math.pow(1 - (progress - PAUSE_END) / (1 - PAUSE_END), 1.5);
       starMat.opacity  = starAlpha;
       trailMat.opacity = starAlpha * 0.5;
 
-      // Canvas element opacity: reveals page underneath
-      if (progress >= FADE_START) {
-        const t = (progress - FADE_START) / (1 - FADE_START);
-        canvas.style.opacity = String(Math.max(1 - Math.pow(t, 4), 0));
-      }
+      // Canvas element opacity: page gradually reveals (power 4 = slow start)
+      canvas.style.opacity = String(Math.max(1 - Math.pow(progress, 4), 0));
 
       // Update star positions + build trail geometry
       for (let i = 0; i < N; i++) {
