@@ -244,11 +244,16 @@ export function PageLoader({ children }: { children?: ReactNode }) {
           : Math.pow(1 - (progress - PAUSE_END) / (1 - PAUSE_END), 1.5);
       starMat.opacity  = starAlpha;
       trailMat.opacity = starAlpha * 0.5;
-      // Fog builds up during pause, then fades with stars
-      const fogAlpha =
-        progress < PAUSE_START
-          ? Math.min(progress / PAUSE_START, 1) * 0.35          // fade in during burst
-          : starAlpha * 0.35;
+      // Fog appears when stars pause, lingers longer than stars
+      let fogAlpha: number;
+      if (progress < PAUSE_START) {
+        fogAlpha = 0;                                                         // hidden during burst
+      } else if (progress < PAUSE_END) {
+        fogAlpha = ((progress - PAUSE_START) / (PAUSE_END - PAUSE_START)) * 0.38; // fade in
+      } else {
+        const t = (progress - PAUSE_END) / (1 - PAUSE_END);
+        fogAlpha = 0.38 * Math.pow(1 - t, 0.6);                              // slow fade out
+      }
       fogMat.opacity = fogAlpha;
 
       // Canvas element opacity: page gradually reveals (power 4 = slow start)
