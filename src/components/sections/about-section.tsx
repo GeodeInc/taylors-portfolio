@@ -21,14 +21,14 @@ export const AboutSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   return (
-    <section id="about" className="relative bg-black py-32 overflow-hidden">
+    <section id="about" className="relative bg-black py-16 overflow-hidden min-h-screen flex flex-col justify-center">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff04_1px,transparent_1px),linear-gradient(to_bottom,#ffffff04_1px,transparent_1px)] bg-[size:64px_64px]" />
       <div className="absolute left-1/4 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full blur-3xl"
         style={{ background: "radial-gradient(circle, var(--navy-glow-sm) 0%, transparent 70%)" }} />
 
-      <div ref={ref} className="relative z-10 mx-auto max-w-7xl px-6">
+      <div ref={ref} className="relative z-10 mx-auto max-w-7xl px-6 pt-20">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}
-          className="mb-16 text-center">
+          className="mb-8 text-center">
           <span className="mb-4 inline-block rounded-full border px-4 py-1.5 text-sm font-medium"
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             About Me
@@ -76,7 +76,7 @@ export const AboutSection = () => {
         </div>
 
         <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-20 grid grid-cols-3 gap-5 md:grid-cols-3">
+          className="mt-10 grid grid-cols-3 gap-5 md:grid-cols-3">
           {stats.map((s) => (
             <div key={s.label} className="flex flex-col items-center rounded-2xl border p-6 text-center"
               style={{ borderColor: "rgba(255,255,255,0.05)", backgroundColor: "rgba(255,255,255,0.02)" }}>

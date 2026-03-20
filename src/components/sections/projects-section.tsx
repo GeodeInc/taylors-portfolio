@@ -1,11 +1,12 @@
 "use client";
-import { motion, useInView } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
-import { BentoGrid, BentoGridItem } from "@/components/aceternity/bento-grid";
-import { IconBrandGithub, IconBuildingStore, IconBrain, IconCube } from "@tabler/icons-react";
+import { motion, useInView, AnimatePresence } from "framer-motion";
+import { useRef, useState, useEffect, useId } from "react";
+import { createPortal } from "react-dom";
+import { IconBrandGithub, IconBuildingStore, IconBrain, IconCube, IconX } from "@tabler/icons-react";
 import { Magnetic } from "@/components/ui/magnetic";
+import { useOutsideClick } from "@/hooks/use-outside-click";
 
-const TenzorSmallIcon = () => (
+export const TenzorSmallIcon = () => (
   <svg width="30" height="30" viewBox="0 0 308 479" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M217.193 10.0027C229.649 46.7203 255.79 65.6079 288.587 81.3969" stroke="white" strokeWidth="35" strokeLinecap="round"/>
     <path d="M24.8409 82.0027H289.841" stroke="white" strokeWidth="35" strokeLinecap="round"/>
@@ -14,7 +15,7 @@ const TenzorSmallIcon = () => (
   </svg>
 );
 
-const TenzorFullLogo = () => (
+export const TenzorFullLogo = () => (
   <svg width="100%" height="100%" viewBox="0 0 1490 479" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M217.193 10.0027C229.649 46.7203 255.79 65.6079 288.587 81.3969" stroke="white" strokeWidth="22" strokeLinecap="round"/>
     <path d="M24.8409 82.0027H289.841" stroke="white" strokeWidth="22" strokeLinecap="round"/>
@@ -25,7 +26,7 @@ const TenzorFullLogo = () => (
   </svg>
 );
 
-const POSHeader = () => {
+export const POSHeader = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [targetX, setTargetX] = useState(260);
 
@@ -122,7 +123,7 @@ const POSHeader = () => {
   );
 };
 
-const SWATCHES = [
+export const SWATCHES = [
   ["#e63946","#e76f51","#f4a261"],
   ["#2a9d8f","#457b9d","#1d3557"],
   ["#8338ec","#3a86ff","#06d6a0"],
@@ -130,7 +131,7 @@ const SWATCHES = [
   ["#d62828","#a8dadc","#457b9d"],
 ];
 
-const ColorPaletteHeader = () => (
+export const ColorPaletteHeader = () => (
   <div className="relative flex h-32 w-full overflow-hidden rounded-xl bg-[#0a0a0a]">
     {/* Animated swatch columns */}
     {Array.from({ length: 5 }).map((_, col) => (
@@ -155,7 +156,7 @@ const ColorPaletteHeader = () => (
   </div>
 );
 
-const ReflectionHeader = () => {
+export const ReflectionHeader = () => {
   const W = 260; const H = 128;
   // axis goes from bottom-left to top-right
   const ax1 = { x: 20, y: H - 16 }; const ax2 = { x: W - 20, y: 16 };
@@ -286,15 +287,127 @@ const projects = [
 export const ProjectsSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [active, setActive] = useState<(typeof projects)[number] | null>(null);
+  const [domReady, setDomReady] = useState(false);
+  const id = useId();
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setDomReady(true); }, []);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setActive(null);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  useOutsideClick(cardRef, () => setActive(null));
+
+  const modal = domReady && createPortal(
+    <>
+      <AnimatePresence>
+        {active && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xl z-[9998]"
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {active && (
+          <div className="fixed inset-0 grid place-items-center z-[9999]">
+            <motion.button
+              layout
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.05 } }}
+              className="flex absolute top-4 right-4 items-center justify-center bg-neutral-800 hover:bg-neutral-700 rounded-full h-8 w-8"
+              onClick={() => setActive(null)}
+            >
+              <IconX size={14} className="text-white" />
+            </motion.button>
+            <motion.div
+              layoutId={`card-${active.title}-${id}`}
+              ref={cardRef}
+              className="w-full max-w-[500px] h-full md:h-fit md:max-h-[90%] flex flex-col sm:rounded-3xl overflow-hidden border border-white/[0.12]"
+              style={{ backgroundColor: "#111111" }}
+            >
+              <motion.div layoutId={`header-${active.title}-${id}`}>
+                <div className="w-full h-64">
+                  {active.header}
+                </div>
+              </motion.div>
+              <div className="p-5">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <motion.h3
+                      layoutId={`title-${active.title}-${id}`}
+                      className="font-semibold text-white text-lg"
+                    >
+                      {active.title}
+                      {active.badge && (
+                        <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-normal align-middle"
+                          style={{ backgroundColor: "var(--navy-fill-md)", color: "var(--navy)" }}>
+                          {active.badge}
+                        </span>
+                      )}
+                    </motion.h3>
+                    <motion.p
+                      layoutId={`desc-${active.title}-${id}`}
+                      className="text-neutral-400 text-sm mt-1"
+                    >
+                      {active.description}
+                    </motion.p>
+                  </div>
+                  <motion.a
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    href={active.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-4 shrink-0 px-4 py-2 text-sm rounded-full font-medium border text-white"
+                    style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)" }}
+                  >
+                    Visit
+                  </motion.a>
+                </div>
+                <motion.div
+                  layout
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-wrap gap-1.5 mt-4"
+                >
+                  {active.tags.map((tag) => (
+                    <span key={tag} className="rounded-full px-2.5 py-0.5 text-xs border"
+                      style={{ borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>
+                      {tag}
+                    </span>
+                  ))}
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>,
+    document.body
+  );
+
   return (
-    <section id="projects" className="relative bg-black py-32 overflow-hidden">
+    <section id="projects" className="relative bg-black py-16 overflow-hidden min-h-screen flex flex-col justify-center">
+      {modal}
       <div className="absolute right-0 top-0 h-[400px] w-[400px] rounded-full blur-3xl"
         style={{ background: "radial-gradient(circle, var(--navy-glow-sm) 0%, transparent 70%)" }} />
       <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full blur-3xl"
         style={{ background: "radial-gradient(circle, var(--navy-fill-xs) 0%, transparent 70%)" }} />
-
-      <div ref={ref} className="relative z-10 mx-auto max-w-7xl px-6">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="mb-16 text-center">
+      <div ref={ref} className="relative z-10 mx-auto max-w-7xl px-6 pt-20">
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="mb-8 text-center">
           <span className="mb-4 inline-block rounded-full border px-4 py-1.5 text-sm font-medium"
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             Projects
@@ -305,15 +418,45 @@ export const ProjectsSection = () => {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }}>
-          <BentoGrid className="grid-cols-1 md:grid-cols-2">
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {projects.map((p) => (
-              <BentoGridItem key={p.title} title={
-                p.badge
-                  ? <span className="flex items-center gap-2">{p.title} <span className="rounded-full px-2 py-0.5 text-xs font-normal" style={{ backgroundColor: "var(--navy-fill-md)", color: "var(--navy)" }}>{p.badge}</span></span>
-                  : p.title
-              } description={p.description} icon={p.icon} tags={p.tags} header={p.header} className="col-span-1" link={p.link} />
+              <motion.li
+                layoutId={`card-${p.title}-${id}`}
+                key={p.title}
+                onClick={() => setActive(p)}
+                className="rounded-2xl border cursor-pointer overflow-hidden hover:border-white/[0.15] transition-colors"
+                style={{ borderColor: "rgba(255,255,255,0.06)", backgroundColor: "rgba(255,255,255,0.02)" }}
+                whileHover={{ scale: 1.015 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              >
+                <motion.div layoutId={`header-${p.title}-${id}`}>
+                  <div className="w-full h-40">
+                    {p.header}
+                  </div>
+                </motion.div>
+                <div className="p-4">
+                  <motion.h3
+                    layoutId={`title-${p.title}-${id}`}
+                    className="font-semibold text-white text-base"
+                  >
+                    {p.title}
+                    {p.badge && (
+                      <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-normal align-middle"
+                        style={{ backgroundColor: "var(--navy-fill-md)", color: "var(--navy)" }}>
+                        {p.badge}
+                      </span>
+                    )}
+                  </motion.h3>
+                  <motion.p
+                    layoutId={`desc-${p.title}-${id}`}
+                    className="text-neutral-500 text-sm mt-1 line-clamp-2"
+                  >
+                    {p.description}
+                  </motion.p>
+                </div>
+              </motion.li>
             ))}
-          </BentoGrid>
+          </ul>
         </motion.div>
 
         <motion.div initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ duration: 0.6, delay: 0.5 }} className="mt-12 text-center">

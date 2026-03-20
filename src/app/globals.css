@@ -143,8 +143,8 @@
 :root {
   --sage:       #a8b58c;   /* primary accent (sage green)   */
   --sage-deep:  #889672;   /* buttons / active states       */
-  --navy:       #4a6080;   /* grayish navy accent           */
-  --navy-dark:  #364d63;   /* deep navy (cards, gradients)  */
+  --navy:       #1e3f7a;   /* deep navy blue accent         */
+  --navy-dark:  #2a5298;   /* deeper navy blue (cards, gradients) */
 
   /* ── Derived tints — auto-update when base changes ── */
 

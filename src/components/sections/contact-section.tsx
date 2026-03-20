@@ -45,11 +45,11 @@ export const ContactSection = () => {
   const inputBase: React.CSSProperties = { borderColor: "rgba(255,255,255,0.07)", backgroundColor: "rgba(255,255,255,0.03)" };
 
   return (
-    <section id="contact" className="relative bg-black py-32 overflow-hidden">
+    <section id="contact" className="relative bg-black py-16 overflow-hidden min-h-screen flex flex-col justify-center">
       <BackgroundBeams />
 
-      <div ref={ref} className="relative z-10 mx-auto max-w-4xl px-6">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="mb-16 text-center">
+      <div ref={ref} className="relative z-10 mx-auto max-w-4xl px-6 pt-20">
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="mb-8 text-center">
           <span className="mb-4 inline-block rounded-full border px-4 py-1.5 text-sm font-medium"
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             Contact

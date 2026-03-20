@@ -9,13 +9,13 @@ import { ContactSection } from "@/components/sections/contact-section";
 export default function Home() {
   return (
     <PageLoader>
-      <main className="bg-black">
+      <main className="bg-black h-screen overflow-y-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <GeodeBrand />
-        <HeroSection />
-        <AboutSection />
-        <SkillsSection />
-        <ProjectsSection />
-        <ContactSection />
+        <div className="sticky top-0 z-[1] min-h-screen"><HeroSection /></div>
+        <div className="sticky top-0 z-[2] min-h-screen bg-black"><AboutSection /></div>
+        <div className="sticky top-0 z-[3] min-h-screen bg-black"><SkillsSection /></div>
+        <div className="sticky top-0 z-[4] min-h-screen bg-black"><ProjectsSection /></div>
+        <div className="sticky top-0 z-[5] min-h-screen bg-black"><ContactSection /></div>
       </main>
     </PageLoader>
   );

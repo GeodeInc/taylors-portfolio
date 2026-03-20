@@ -137,7 +137,7 @@ export default function WormholeCanvas({ onDone, startRef, rafRef, darkBgRef }: 
 
         let speedMult: number;
         if (progress < PAUSE_START) {
-          speedMult = Math.pow(18, progress / PAUSE_START);
+          speedMult = 2 * Math.pow(9, progress / PAUSE_START);
         } else if (progress < PAUSE_END) {
           const t = (progress - PAUSE_START) / (PAUSE_END - PAUSE_START);
           speedMult = Math.pow(13.5, 1 - t) * Math.pow(0.025, t);

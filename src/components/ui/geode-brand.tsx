@@ -1,17 +1,23 @@
 "use client";
-import { motion, useScroll, useMotionValueEvent } from "framer-motion";
-import { useState } from "react";
+import { motion, useAnimation } from "framer-motion";
+import { useEffect } from "react";
 
 export const GeodeBrand = () => {
-  const { scrollYProgress } = useScroll();
-  const [collapsed, setCollapsed] = useState(false);
-  const [hovered, setHovered] = useState(false);
+  const showWordmark = true;
+  const iconControls = useAnimation();
 
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    setCollapsed(v > 0.12);
-  });
+  useEffect(() => {
+    iconControls.start({ opacity: 1, scale: 1, rotate: 0, transition: { duration: 0.5, ease: [0.34, 1.56, 0.64, 1], delay: 0.2 } });
+  }, [iconControls]);
 
-  const showWordmark = !collapsed || hovered;
+  useEffect(() => {
+    const handler = () => {
+      iconControls.set({ opacity: 0, scale: 0.6, rotate: -10 });
+      iconControls.start({ opacity: 1, scale: 1, rotate: 0, transition: { duration: 0.5, ease: [0.34, 1.56, 0.64, 1] } });
+    };
+    window.addEventListener("nav-transition-done", handler);
+    return () => window.removeEventListener("nav-transition-done", handler);
+  }, [iconControls]);
 
   return (
     <motion.a
@@ -19,10 +25,8 @@ export const GeodeBrand = () => {
       target="_blank"
       rel="noopener noreferrer"
       className="fixed left-6 top-5 z-[5000] flex items-center"
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
     >
-      {/* Icon — always visible, drops in on load */}
+      {/* Icon — drops in on load, reanimates after nav transition */}
       <motion.img
         src="/geodeinc_icon_only.svg"
         alt="GeodeInc"
@@ -30,8 +34,7 @@ export const GeodeBrand = () => {
         height={36}
         className="rounded-lg"
         initial={{ opacity: 0, scale: 0.6, rotate: -10 }}
-        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-        transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1], delay: 0.2 }}
+        animate={iconControls}
       />
 
       {/* Wordmark — clips and slides in/out */}

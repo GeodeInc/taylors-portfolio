@@ -23,6 +23,7 @@ export const HeroSection = () => {
   const targetMouseRef = useRef<Point>({ x: 0, y: 0 });
 
   useEffect(() => {
+    if (window.self !== window.top) return; // skip canvas RAF in iframes
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -106,10 +107,10 @@ export const HeroSection = () => {
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col items-center justify-center px-6 py-32 text-center md:py-48">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-6">
           <span className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium"
-            style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
+            style={{ borderColor: "#2563eb", backgroundColor: "rgba(37,99,235,0.12)", color: "#ffffff", boxShadow: "0 0 10px 2px rgba(37,99,235,0.3), 0 0 22px 4px rgba(37,99,235,0.12)" }}>
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ backgroundColor: "var(--navy)" }} />
-              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: "var(--navy)" }} />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ backgroundColor: "#2563eb" }} />
+              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: "#2563eb" }} />
             </span>
             Available for work
           </span>
@@ -124,17 +125,11 @@ export const HeroSection = () => {
           <TypewriterWords words={["UI/UX Developer at TenzorLLC", "Co-Founder & Full Stack Dev", "Computer Engineering @ Rutgers"]} />
         </motion.div>
 
-        <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-6 max-w-2xl text-lg leading-relaxed text-neutral-300">
-          CE student at Rutgers, co-founder of TenzorLLC — I build full stack web apps
-          with a focus on clean UI and real user experience.
-        </motion.p>
-
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Magnetic>
             <a href="#projects" className="group inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold transition-all hover:scale-[1.05] hover:brightness-110 active:scale-[0.97]"
-              style={{ backgroundColor: "var(--navy-dark)", color: "#ffffff", boxShadow: "0 8px 28px var(--navy-shadow)", fontFamily: "var(--font-sub)" }}>
+              style={{ backgroundColor: "var(--sage-deep)", color: "#ffffff", border: "1px solid rgba(168,181,140,0.45)", boxShadow: "0 4px 20px rgba(136,150,114,0.5), 0 8px 40px rgba(136,150,114,0.25)", fontFamily: "var(--font-sub)" }}>
               <span>View My Work</span>
               <span className="transition-transform group-hover:translate-x-1">→</span>
             </a>
@@ -209,9 +204,9 @@ const TypewriterWords = ({ words }: { words: string[] }) => {
     return () => clearTimeout(t);
   }, [text, del, idx, words, ready]);
   return (
-    <div className="flex items-center gap-2 font-semibold" style={{ fontSize: "clamp(0.85rem, 3.8vw, 1.875rem)", color: "var(--navy)", fontFamily: "var(--font-sub)" }}>
+    <div className="flex items-center gap-2 font-semibold" style={{ fontSize: "clamp(0.85rem, 3.8vw, 1.875rem)", color: "var(--navy-dark)", fontFamily: "var(--font-sub)" }}>
       <span>{text}</span>
-      <span className="animate-pulse" style={{ color: "var(--navy-dark)" }}>|</span>
+      <span className="animate-pulse" style={{ color: "var(--navy)" }}>|</span>
     </div>
   );
 };
