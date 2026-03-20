@@ -1,6 +1,7 @@
 "use client";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import { useTheme } from "@/contexts/theme-context";
 import { InfiniteMovingCards } from "@/components/aceternity/infinite-moving-cards";
 import {
   IconBrandReact, IconBrandNextjs, IconBrandTypescript, IconBrandNodejs,
@@ -58,6 +59,13 @@ const categories = [
 export const SkillsSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { theme } = useTheme();
+  const isLight = theme === "light";
+  const cardBorder = isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.06)";
+  const cardBg     = isLight ? "rgba(0,0,0,0.02)"  : "rgba(255,255,255,0.02)";
+  const tagBorder  = isLight ? "rgba(0,0,0,0.07)"  : "rgba(255,255,255,0.07)";
+  const tagBg      = isLight ? "rgba(0,0,0,0.04)"  : "rgba(255,255,255,0.04)";
+  const tagColor   = isLight ? "var(--navy-dark)"  : undefined;
   return (
     <section id="skills" className="relative bg-black py-16 overflow-x-hidden min-h-screen flex flex-col justify-center">
       <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
@@ -70,7 +78,7 @@ export const SkillsSection = () => {
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             Skills & Tech
           </span>
-          <h2 className="mt-4 text-3xl font-bold text-white md:text-4xl lg:text-5xl" style={{ fontFamily: "var(--font-sub)" }}>
+          <h2 className="mt-4 text-3xl font-bold md:text-4xl lg:text-5xl" style={{ fontFamily: "var(--font-sub)", color: isLight ? "var(--navy)" : "#ffffff" }}>
             What I Work With
           </h2>
         </motion.div>
@@ -85,16 +93,16 @@ export const SkillsSection = () => {
           className="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-3">
           {categories.map((cat) => (
             <div key={cat.label} className="rounded-2xl border p-5"
-              style={{ borderColor: "rgba(255,255,255,0.06)", backgroundColor: "rgba(255,255,255,0.02)" }}>
+              style={{ borderColor: cardBorder, backgroundColor: cardBg }}>
               <div className="mb-3 text-xs font-semibold uppercase tracking-widest" style={{ color: cat.color, fontFamily: "var(--font-sub)" }}>
                 {cat.label}
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {cat.skills.map((s) => (
-                  <span key={s} className="rounded-full px-2.5 py-1 text-xs text-neutral-300"
-                    style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <span key={s} className="rounded-full px-2.5 py-1 text-xs"
+                    style={{ backgroundColor: tagBg, border: `1px solid ${tagBorder}`, color: tagColor ?? "rgb(212 212 212)" }}>
                     {s}
-                  </span>
+                    </span>
                 ))}
               </div>
             </div>

@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { IconBrandGithub, IconBuildingStore, IconBrain, IconCube, IconX } from "@tabler/icons-react";
 import { Magnetic } from "@/components/ui/magnetic";
 import { useOutsideClick } from "@/hooks/use-outside-click";
+import { useTheme } from "@/contexts/theme-context";
 
 export const TenzorSmallIcon = () => (
   <svg width="30" height="30" viewBox="0 0 308 479" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -287,6 +288,14 @@ const projects = [
 export const ProjectsSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { theme } = useTheme();
+  const isLight = theme === "light";
+  const cardBorder  = isLight ? "rgba(0,0,0,0.07)"  : "rgba(255,255,255,0.06)";
+  const cardBg      = isLight ? "rgba(0,0,0,0.02)"   : "rgba(255,255,255,0.02)";
+  const tagBorder   = isLight ? "rgba(0,0,0,0.1)"    : "rgba(255,255,255,0.08)";
+  const tagColor    = isLight ? "rgba(0,0,0,0.5)"    : "rgba(255,255,255,0.5)";
+  const modalBg     = isLight ? "#f0eeea"             : "#111111";
+  const headingColor = isLight ? "var(--navy)"        : "#ffffff";
   const [active, setActive] = useState<(typeof projects)[number] | null>(null);
   const [domReady, setDomReady] = useState(false);
   const id = useId();
@@ -333,7 +342,7 @@ export const ProjectsSection = () => {
               layoutId={`card-${active.title}-${id}`}
               ref={cardRef}
               className="w-full max-w-[500px] h-full md:h-fit md:max-h-[90%] flex flex-col sm:rounded-3xl overflow-hidden border border-white/[0.12]"
-              style={{ backgroundColor: "#111111" }}
+              style={{ backgroundColor: modalBg }}
             >
               <motion.div layoutId={`header-${active.title}-${id}`}>
                 <div className="w-full h-64">
@@ -345,7 +354,7 @@ export const ProjectsSection = () => {
                   <div>
                     <motion.h3
                       layoutId={`title-${active.title}-${id}`}
-                      className="font-semibold text-white text-lg"
+                      className="font-semibold text-lg" style={{ color: headingColor }}
                     >
                       {active.title}
                       {active.badge && (
@@ -385,7 +394,7 @@ export const ProjectsSection = () => {
                 >
                   {active.tags.map((tag) => (
                     <span key={tag} className="rounded-full px-2.5 py-0.5 text-xs border"
-                      style={{ borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>
+                      style={{ borderColor: tagBorder, color: tagColor }}>
                       {tag}
                     </span>
                   ))}
@@ -412,7 +421,7 @@ export const ProjectsSection = () => {
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             Projects
           </span>
-          <h2 className="mt-4 text-4xl font-bold text-white md:text-5xl" style={{ fontFamily: "var(--font-sub)" }}>
+          <h2 className="mt-4 text-4xl font-bold md:text-5xl" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>
             Things I&apos;ve Built
           </h2>
         </motion.div>
@@ -425,7 +434,7 @@ export const ProjectsSection = () => {
                 key={p.title}
                 onClick={() => setActive(p)}
                 className="rounded-2xl border cursor-pointer overflow-hidden hover:border-white/[0.15] transition-colors"
-                style={{ borderColor: "rgba(255,255,255,0.06)", backgroundColor: "rgba(255,255,255,0.02)" }}
+                style={{ borderColor: cardBorder, backgroundColor: cardBg }}
                 whileHover={{ scale: 1.015 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
@@ -437,7 +446,7 @@ export const ProjectsSection = () => {
                 <div className="p-4">
                   <motion.h3
                     layoutId={`title-${p.title}-${id}`}
-                    className="font-semibold text-white text-base"
+                    className="font-semibold text-base" style={{ color: headingColor }}
                   >
                     {p.title}
                     {p.badge && (

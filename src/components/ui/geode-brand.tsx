@@ -1,8 +1,11 @@
 "use client";
 import { motion, useAnimation } from "framer-motion";
 import { useEffect } from "react";
+import { useTheme } from "@/contexts/theme-context";
 
 export const GeodeBrand = () => {
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const showWordmark = true;
   const iconControls = useAnimation();
 
@@ -49,7 +52,7 @@ export const GeodeBrand = () => {
         transition={{ duration: showWordmark ? 0.4 : 0.9, ease: [0.4, 0, 0.2, 1] }}
       >
         <motion.img
-          src="/geodeinc_wordmark_only.svg"
+          src={isLight ? "/geodeinc_wordmark_only_light.svg" : "/geodeinc_wordmark_only.svg"}
           alt="GeodeInc"
           className="h-7 w-auto object-contain block"
           animate={{ x: showWordmark ? 0 : -8 }}

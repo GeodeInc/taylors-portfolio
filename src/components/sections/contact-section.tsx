@@ -1,6 +1,7 @@
 "use client";
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
+import { useTheme } from "@/contexts/theme-context";
 import { BackgroundBeams } from "@/components/aceternity/background-beams";
 import { IconBrandGithub, IconBrandLinkedin, IconMail, IconPhone, IconSend, IconCheck } from "@tabler/icons-react";
 import { Magnetic } from "@/components/ui/magnetic";
@@ -15,6 +16,8 @@ const socials = [
 export const ContactSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,7 +45,16 @@ export const ContactSection = () => {
     }
   };
 
-  const inputBase: React.CSSProperties = { borderColor: "rgba(255,255,255,0.07)", backgroundColor: "rgba(255,255,255,0.03)" };
+  const inputBase: React.CSSProperties = {
+    borderColor: isLight ? "rgba(0,0,0,0.1)"  : "rgba(255,255,255,0.07)",
+    backgroundColor: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.03)",
+    color: isLight ? "var(--navy)" : "#ffffff",
+  };
+  const inputFocusBorder = isLight ? "rgba(0,0,0,0.25)" : "var(--navy-border-lg)";
+  const inputBlurBorder  = isLight ? "rgba(0,0,0,0.1)"  : "rgba(255,255,255,0.07)";
+  const socialBorder = isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.05)";
+  const socialBg     = isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)";
+  const footerBorder = isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.04)";
 
   return (
     <section id="contact" className="relative bg-black py-16 overflow-hidden min-h-screen flex flex-col justify-center">
@@ -54,7 +66,7 @@ export const ContactSection = () => {
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             Contact
           </span>
-          <h2 className="mt-4 text-4xl font-bold text-white md:text-5xl" style={{ fontFamily: "var(--font-sub)" }}>
+          <h2 className="mt-4 text-4xl font-bold md:text-5xl" style={{ fontFamily: "var(--font-sub)", color: isLight ? "var(--navy)" : "#ffffff" }}>
             Let&apos;s Work Together
           </h2>
         </motion.div>
@@ -70,10 +82,10 @@ export const ContactSection = () => {
                   <label className="mb-2 block text-sm font-medium text-neutral-500">{f.label}</label>
                   <input type={f.type} required value={form[f.key as keyof typeof form]}
                     onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                    className="w-full rounded-xl border px-4 py-3 text-white placeholder-neutral-700 outline-none transition-all"
+                    className="w-full rounded-xl border px-4 py-3 placeholder-neutral-700 outline-none transition-all"
                     style={inputBase}
-                    onFocus={(e) => (e.target.style.borderColor = "var(--navy-border-lg)")}
-                    onBlur={(e)  => (e.target.style.borderColor = "rgba(255,255,255,0.07)")}
+                    onFocus={(e) => (e.target.style.borderColor = inputFocusBorder)}
+                    onBlur={(e)  => (e.target.style.borderColor = inputBlurBorder)}
                     placeholder={f.ph} />
                 </div>
               ))}
@@ -81,10 +93,10 @@ export const ContactSection = () => {
                 <label className="mb-2 block text-sm font-medium text-neutral-500">Message</label>
                 <textarea required rows={5} value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  className="w-full rounded-xl border px-4 py-3 text-white placeholder-neutral-700 outline-none transition-all resize-none"
+                  className="w-full rounded-xl border px-4 py-3 placeholder-neutral-700 outline-none transition-all resize-none"
                   style={inputBase}
-                  onFocus={(e) => (e.target.style.borderColor = "var(--navy-border-lg)")}
-                  onBlur={(e)  => (e.target.style.borderColor = "rgba(255,255,255,0.07)")}
+                  onFocus={(e) => (e.target.style.borderColor = inputFocusBorder)}
+                  onBlur={(e)  => (e.target.style.borderColor = inputBlurBorder)}
                   placeholder="Hey Taylor, I'd love to collaborate on..." />
               </div>
               <Magnetic>
@@ -105,7 +117,7 @@ export const ContactSection = () => {
           <motion.div initial={{ opacity: 0, x: 30 }} animate={isInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-col justify-between space-y-8">
             <div>
-              <h3 className="mb-2 text-lg font-semibold text-white" style={{ fontFamily: "var(--font-sub)" }}>Get in touch</h3>
+              <h3 className="mb-2 text-lg font-semibold" style={{ fontFamily: "var(--font-sub)", color: isLight ? "var(--navy)" : "#ffffff" }}>Get in touch</h3>
               <p className="text-neutral-400">
                 I&apos;m currently open to new opportunities. Whether you have a question or
                 just want to say hi — I&apos;ll get back to you!
@@ -122,10 +134,10 @@ export const ContactSection = () => {
                 {socials.map((s) => (
                   <Magnetic key={s.label} strength={0.3}>
                     <a href={s.href} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm text-neutral-500 transition-all hover:scale-[1.04] active:scale-[0.97]"
-                      style={{ borderColor: "rgba(255,255,255,0.05)", backgroundColor: "rgba(255,255,255,0.02)" }}
+                      className="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-all hover:scale-[1.04] active:scale-[0.97]"
+                      style={{ borderColor: socialBorder, backgroundColor: socialBg, color: isLight ? "rgba(0,0,0,0.5)" : undefined }}
                       onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--navy-border)"; e.currentTarget.style.color = "var(--navy)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = ""; }}>
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = socialBorder; e.currentTarget.style.color = isLight ? "rgba(0,0,0,0.5)" : ""; }}>
                       {s.icon}
                       {s.label}
                     </a>
@@ -141,7 +153,7 @@ export const ContactSection = () => {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 bg-emerald-400" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                 </span>
-                <span className="text-sm font-medium text-white">Available for work</span>
+                <span className="text-sm font-medium" style={{ color: isLight ? "var(--navy)" : "#ffffff" }}>Available for work</span>
               </div>
               <p className="text-sm text-neutral-500">
                 Currently open to new opportunities. Response time is typically within 24 hours.
@@ -151,7 +163,7 @@ export const ContactSection = () => {
         </div>
       </div>
 
-      <div className="relative z-10 mt-24 border-t pt-8 text-center" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
+      <div className="relative z-10 mt-24 border-t pt-8 text-center" style={{ borderColor: footerBorder }}>
         <p className="text-sm text-neutral-700">
           © 2025 Taylor Houghtaling. Built with Next.js, Framer Motion & Tailwind CSS.
         </p>

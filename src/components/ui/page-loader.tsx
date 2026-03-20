@@ -1,13 +1,96 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { AnimatePresence, motion, useAnimation } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion, useAnimation } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { IconHome2, IconUser, IconCode, IconMail } from "@tabler/icons-react";
+import { IconHome2, IconUser, IconCode, IconMail, IconSun, IconMoon } from "@tabler/icons-react";
 import { ImagesBadge } from "@/components/ui/images-badge";
+import { useTheme } from "@/contexts/theme-context";
+import { PreviewModeContext } from "@/contexts/preview-mode-context";
+import { HeroSection } from "@/components/sections/hero-section";
+import { AboutSection } from "@/components/sections/about-section";
+import { SkillsSection } from "@/components/sections/skills-section";
+import { ProjectsSection } from "@/components/sections/projects-section";
+import { ContactSection } from "@/components/sections/contact-section";
 
 const WormholeCanvas = dynamic(() => import("./wormhole-canvas"), { ssr: false });
+
+const SECTION_COMPONENTS: Record<string, React.ReactNode> = {
+  home:     <HeroSection />,
+  about:    <AboutSection />,
+  skills:   <SkillsSection />,
+  projects: <ProjectsSection />,
+  contact:  <ContactSection />,
+};
+
+// Renders a section scaled to always fill its container, tracked via ResizeObserver
+function SectionPreview({ section }: { section: string }) {
+  const outerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.333);
+  // Use actual viewport as the inner canvas so content is 1:1 at full-screen
+  const vpW = typeof window !== "undefined" ? window.innerWidth  : 1440;
+  const vpH = typeof window !== "undefined" ? window.innerHeight : 900;
+
+  useEffect(() => {
+    const el = outerRef.current;
+    if (!el) return;
+    let rafId = 0;
+    const ro = new ResizeObserver(([entry]) => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const { width: w, height: h } = entry.contentRect;
+        setScale(Math.min(w / vpW, h / vpH));
+      });
+    });
+    ro.observe(el);
+    return () => { ro.disconnect(); cancelAnimationFrame(rafId); };
+  }, [vpW, vpH]);
+
+  return (
+    <MotionConfig reducedMotion="always">
+      <PreviewModeContext.Provider value={true}>
+        <div ref={outerRef} style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+          <div
+            data-preview="true"
+            style={{
+              position: "absolute",
+              width: vpW,
+              height: vpH,
+              top: (300 - vpH) / 2,
+              left: (480 - vpW) / 2,
+              transform: `scale(${scale})`,
+              transformOrigin: "center center",
+              pointerEvents: "none",
+            }}
+          >
+            <style>{`
+              [data-preview="true"] *,
+              [data-preview="true"] *::before,
+              [data-preview="true"] *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                transition-delay: 0ms !important;
+                opacity: 1 !important;
+              }
+              [data-preview="true"] .animate-scroll {
+                animation-duration: var(--animation-duration) !important;
+                animation-iteration-count: infinite !important;
+              }
+              [data-preview="true"] .min-h-screen,
+              [data-preview="true"] section {
+                min-height: ${vpH}px !important;
+                height: ${vpH}px !important;
+              }
+            `}</style>
+            {SECTION_COMPONENTS[section]}
+          </div>
+        </div>
+      </PreviewModeContext.Provider>
+    </MotionConfig>
+  );
+}
 
 const NAV_ICONS = [
   { id: "home",    icon: <IconHome2 size={24} />, label: "Home"    },
@@ -34,28 +117,14 @@ const SECTION_INDEX: Record<string, number> = {
 
 const SECTION_ORDER = ["home", "about", "skills", "projects", "contact"];
 
-const SECTION_URLS: Record<string, string> = {
-  home:     "/preview/home",
-  about:    "/preview/about",
-  skills:   "/preview/skills",
-  projects: "/preview/projects",
-  contact:  "/preview/contact",
-};
-
-// Static screenshots used only for the expand-to-fullscreen phase
-const SECTION_PREVIEWS: Record<string, string> = {
-  home:     "/preview_home.png",
-  about:    "/preview_about.png",
-  skills:   "/preview_skills.png",
-  projects: "/preview_projects.png",
-  contact:  "/preview_contact.png",
-};
 
 const STAGGER   = 18; // px vertical offset per card depth
 const X_STAGGER = 30; // px horizontal offset per card depth (stagger right)
 
 // ─── Overlay — completely independent, listens for custom events ──────────────
 function NavTransitionOverlay() {
+  const { theme } = useTheme();
+  const overlayBg = theme === "light" ? "#f5f4f0" : "#000000";
   // phase: idle → shrinking → animating → expanding → idle
   const [phase, setPhase] = useState<"idle" | "shrinking" | "animating" | "expanding">("idle");
   const [finalTarget, setFinalTarget] = useState("about");
@@ -67,12 +136,46 @@ function NavTransitionOverlay() {
   const [vp, setVp] = useState({ w: 0, h: 0 });
   const containerAnim = useAnimation();
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const shrinkParamsRef = useRef<{ isFast: boolean; absSteps: number; srcIdx: number; dir: number; fullScale: number } | null>(null);
 
   const clearAll = () => { timers.current.forEach(clearTimeout); timers.current = []; };
   const sched = (fn: () => void, ms: number) => {
     const t = setTimeout(fn, ms);
     timers.current.push(t);
   };
+
+  // Kick off shrink animation AFTER React has re-rendered the overlay visible
+  useEffect(() => {
+    if (phase !== "shrinking" || !shrinkParamsRef.current) return;
+    const { isFast, absSteps, srcIdx, dir, fullScale } = shrinkParamsRef.current;
+
+    containerAnim.set({ scale: fullScale, rotateX: 0, rotateY: 0 });
+    containerAnim.start({
+      scale: 1, rotateX: 4, rotateY: -6,
+      transition: { duration: 1.1, ease: [0.4, 0, 0.15, 1] },
+    }).then(() => {
+      setPhase("animating");
+
+      const SWAP_TIME    = isFast ? 240 : 1010;
+      const STEP_DUR     = isFast ? 650 : 0;
+      const EXPAND_DELAY = isFast ? absSteps * STEP_DUR + 300 : 2300;
+
+      sched(() => setSwapped(true), SWAP_TIME);
+
+      for (let i = 1; i < absSteps; i++) {
+        const ss = SECTION_ORDER[srcIdx + dir * i];
+        const st = SECTION_ORDER[srcIdx + dir * (i + 1)];
+        sched(() => {
+          setAnimSrc(ss);
+          setAnimTgt(st);
+          setSwapped(false);
+          sched(() => setSwapped(true), SWAP_TIME);
+        }, i * STEP_DUR);
+      }
+
+      sched(() => setPhase("expanding"), EXPAND_DELAY);
+    });
+  }, [phase]); // eslint-disable-line
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -91,51 +194,30 @@ function NavTransitionOverlay() {
       setAnimSrc(s);
       setAnimTgt(SECTION_ORDER[srcIdx + dir]);
 
-      // Phase 1: source iframe fills full screen, then shrinks to card size
-      containerAnim.set({ width: window.innerWidth, height: window.innerHeight });
+      // Store params — the shrinking useEffect will pick these up after re-render
+      shrinkParamsRef.current = {
+        isFast, absSteps, srcIdx, dir,
+        fullScale: Math.max(window.innerWidth / 480, window.innerHeight / 300),
+      };
       setPhase("shrinking");
-      containerAnim.start({
-        width: 480, height: 300,
-        transition: { duration: 1.1, ease: [0.4, 0, 0.15, 1] },
-      }).then(() => {
-        // Phase 2: card lift/swap animation
-        setPhase("animating");
-
-        const SWAP_TIME    = isFast ? 240 : 1010;
-        const STEP_DUR     = isFast ? 650 : 0;
-        const EXPAND_DELAY = isFast ? absSteps * STEP_DUR + 300 : 2300;
-
-        sched(() => setSwapped(true), SWAP_TIME);
-
-        for (let i = 1; i < absSteps; i++) {
-          const ss = SECTION_ORDER[srcIdx + dir * i];
-          const st = SECTION_ORDER[srcIdx + dir * (i + 1)];
-          sched(() => {
-            setAnimSrc(ss);
-            setAnimTgt(st);
-            setSwapped(false);
-            sched(() => setSwapped(true), SWAP_TIME);
-          }, i * STEP_DUR);
-        }
-
-        // Phase 3: expand to full screen
-        sched(() => setPhase("expanding"), EXPAND_DELAY);
-      });
     };
 
     window.addEventListener("nav-transition", handler);
     return () => window.removeEventListener("nav-transition", handler);
-  }, [containerAnim]);
+  }, []);
 
   // Drive expanding animation
   useEffect(() => {
     if (phase !== "expanding") return;
     clearAll();
-    const expandW = vp.w || window.innerWidth;
-    const expandH = vp.h || window.innerHeight;
+    const vpW = vp.w || window.innerWidth;
+    const vpH = vp.h || window.innerHeight;
+    const fullScale = Math.max(vpW / 480, vpH / 300);
+    // Snap rotation to exactly 0 first so the perspective-free scale-up has no tilt residue
+    containerAnim.set({ rotateX: 0, rotateY: 0 });
     containerAnim.start({
-      width: expandW, height: expandH,
-      transition: { duration: 2.5, ease: [0.4, 0, 0.15, 1] },
+      scale: fullScale,
+      transition: { type: "spring", stiffness: 40, damping: 22, mass: 1.2, clamp: true },
     }).then(() => {
       setPhase("idle");
       window.dispatchEvent(new Event("nav-transition-done"));
@@ -175,24 +257,20 @@ function NavTransitionOverlay() {
       className="fixed inset-0 overflow-hidden pointer-events-none"
       style={{ zIndex: 8000, opacity: show ? 1 : 0 }}
     >
-      {/* Solid black backdrop — fades out when expanding */}
-      <motion.div
-        className="absolute inset-0 bg-black pointer-events-none"
-        animate={{ opacity: expanding ? 0 : 1 }}
-        transition={{ duration: 0.3 }}
-      />
+      {/* Solid backdrop — fades out when expanding */}
+      <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: overlayBg }} />
 
       {/* Card stack container — driven by useAnimation */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ perspective: "1400px" }}>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ perspective: expanding ? "none" : "1400px" }}>
         <motion.div
           animate={containerAnim}
           style={{
+            width: 480,
+            height: 300,
             position: "relative",
             overflow: (expanding || shrinking) ? "hidden" : "visible",
             pointerEvents: "none",
-            rotateX: shrinking ? 0 : expanding ? 0 : "4deg",
-            rotateY: shrinking ? 0 : expanding ? 0 : "-6deg",
-            filter: "none",
+            transformOrigin: "center center",
           }}
         >
           {SECTION_ORDER.map((section) => {
@@ -211,8 +289,10 @@ function NavTransitionOverlay() {
             return (
               <motion.div
                 key={section}
-                className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none"
+                className="absolute inset-0 overflow-hidden pointer-events-none"
                 style={{
+                  backgroundColor: overlayBg,
+                  borderRadius: expanding && isTarget ? 0 : "1rem",
                   boxShadow: shrinking ? "none" : `0 10px 32px rgba(74,96,128,${Math.max(0, 0.35 - prePos * 0.06)}), 0 50px 100px rgba(0,0,0,0.65)`,
                   zIndex: shrinking ? (isSource ? 5 : 1) : (swapped ? postZ : preZ),
                 }}
@@ -247,19 +327,17 @@ function NavTransitionOverlay() {
               >
                 {(!shrinking || isSource) && (
                   <motion.div
-                    className="absolute inset-0 rounded-2xl pointer-events-none"
-                    style={{ border: "1px solid var(--navy)", zIndex: 10 }}
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ border: "1px solid var(--navy)", borderRadius: "1rem", zIndex: 10 }}
                     animate={expanding && isTarget ? { opacity: 0 } : { opacity: 1 }}
-                    transition={{ duration: 0.8, delay: expanding && isTarget ? 1.7 : 0 }}
+                    transition={{ duration: 0.25, delay: 0 }}
                   />
                 )}
-                <iframe
-                  src={SECTION_URLS[section]}
-                  title={section}
-                  className="w-full h-full border-0"
-                  style={{ pointerEvents: "none" }}
-                  scrolling="no"
-                />
+                {show && (
+                  (shrinking  && prePos === 0) ||
+                  (phase === "animating" && prePos <= 1) ||
+                  (expanding  && isTarget)
+                ) && <SectionPreview section={section} />}
               </motion.div>
             );
           })}
@@ -299,6 +377,11 @@ function NavTransitionOverlay() {
 
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 function ScatteredNav() {
+  const { theme, toggle } = useTheme();
+  const isLight = theme === "light";
+  const btnBorder = isLight ? "var(--sage-border)"        : "var(--navy-border)";
+  const btnColor  = isLight ? "var(--sage-deep)"          : "var(--navy)";
+  const muted     = isLight ? "rgba(0,0,0,0.35)"          : "rgba(255,255,255,0.35)";
   const [mounted, setMounted] = useState(false);
   const [onHero, setOnHero] = useState(true);
   const [activeSection, setActiveSection] = useState("home");
@@ -383,60 +466,56 @@ function ScatteredNav() {
     if (main) main.scrollTop += e.deltaY;
   };
 
+  const hoverTrans = { type: "spring", stiffness: 300, damping: 22 } as const;
+
   return (
     <div
       ref={navRef}
-      className="fixed top-14 right-4 md:right-0 md:left-0 md:justify-center z-[5000] flex items-center gap-2 pointer-events-none"
+      className="fixed top-14 right-4 md:right-0 md:left-0 md:justify-center z-[5000] flex pointer-events-none"
       style={{ willChange: "transform" }}
     >
-      {NAV_ICONS.map((item, i) => (
+      <div className="relative flex items-end pointer-events-auto">
+        {/* ── Nav icons ── */}
+        {NAV_ICONS.map((item, i) => (
+          <motion.button
+            key={`${item.id}-${reanimKey}`}
+            title={item.label}
+            disabled={activeSection === item.id}
+            className="relative flex flex-col items-center px-4 py-2"
+            style={{ color: activeSection === item.id ? btnColor : muted, cursor: activeSection === item.id ? "default" : "pointer" }}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: i * 0.07 }}
+            whileHover={activeSection === item.id ? {} : { y: -3, transition: hoverTrans }}
+            onClick={() => navigateTo(item.id)}
+            onWheel={forwardScroll}
+          >
+            {item.icon}
+            {activeSection === item.id && (
+              <motion.div
+                layoutId="nav-underline"
+                className="absolute -bottom-px left-0 right-0 h-[2px] rounded-full"
+                style={{ backgroundColor: btnColor }}
+                transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+              />
+            )}
+          </motion.button>
+        ))}
+
+        {/* ── Projects ── */}
         <motion.button
-          key={`${item.id}-${reanimKey}`}
-          title={item.label}
-          disabled={activeSection === item.id}
-          className="relative flex items-center justify-center rounded-full border w-14 h-14 pointer-events-auto overflow-hidden"
-          style={{ borderColor: "var(--navy-border)", backgroundColor: "#000000", color: "var(--navy)", cursor: activeSection === item.id ? "default" : "pointer" }}
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.6, delay: i * 0.08 }}
-          whileHover={activeSection === item.id ? {} : { y: -3, scale: 1.07, transition: { type: "spring", stiffness: 200, damping: 18 } }}
-          onClick={() => navigateTo(item.id)}
+          key={`projects-${reanimKey}`}
+          title="Projects"
+          disabled={activeSection === "projects"}
+          className="relative flex flex-col items-center px-4 py-2"
+          style={{ color: activeSection === "projects" ? btnColor : muted, zIndex: 5001, cursor: activeSection === "projects" ? "default" : "pointer" }}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: 4 * 0.07 }}
+          whileHover={activeSection === "projects" ? {} : { y: -3, transition: hoverTrans }}
+          onClick={() => navigateTo("projects")}
           onWheel={forwardScroll}
         >
-          {activeSection === item.id && (
-            <motion.div
-              layoutId="nav-active-pill"
-              className="absolute inset-0 rounded-full"
-              style={{ backgroundColor: "var(--navy-fill-md)" }}
-              transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
-            />
-          )}
-          <span className="relative z-10">{item.icon}</span>
-        </motion.button>
-      ))}
-
-      <motion.button
-        key={`projects-${reanimKey}`}
-        title="Projects"
-        disabled={activeSection === "projects"}
-        className="relative flex items-center justify-center rounded-full border w-14 h-14 pointer-events-auto"
-        style={{ borderColor: "var(--navy-border)", backgroundColor: "#000000", color: "var(--navy)", zIndex: 5001, cursor: activeSection === "projects" ? "default" : "pointer" }}
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.6, delay: 4 * 0.08 }}
-        whileHover={activeSection === "projects" ? {} : { y: -3, scale: 1.07, transition: { type: "spring", stiffness: 200, damping: 18 } }}
-        onClick={() => navigateTo("projects")}
-        onWheel={forwardScroll}
-      >
-        {activeSection === "projects" && (
-          <motion.div
-            layoutId="nav-active-pill"
-            className="absolute inset-0 rounded-full"
-            style={{ backgroundColor: "var(--navy-fill-md)" }}
-            transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
-          />
-        )}
-        <span className="relative z-10">
           <ImagesBadge
             iframes={PROJECT_PREVIEWS}
             folderSize={{ width: 28, height: 22 }}
@@ -448,8 +527,54 @@ function ScatteredNav() {
             onOpenChange={(open) => { previewsOpen.current = open; }}
             closeRef={closePreviewsRef}
           />
-        </span>
-      </motion.button>
+          {activeSection === "projects" && (
+            <motion.div
+              layoutId="nav-underline"
+              className="absolute -bottom-px left-0 right-0 h-[2px] rounded-full"
+              style={{ backgroundColor: btnColor }}
+              transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+            />
+          )}
+        </motion.button>
+
+        {/* ── Divider ── */}
+        <div className="self-stretch mx-2 mb-2" style={{ width: 1, backgroundColor: btnBorder, opacity: 0.5 }} />
+
+        {/* ── Theme toggle ── */}
+        <motion.button
+          key={`theme-${reanimKey}`}
+          title={theme === "dark" ? "Light mode" : "Dark mode"}
+          className="flex items-center px-3 py-2"
+          style={{ color: muted }}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: 5 * 0.07 }}
+          whileHover={{ y: -3, transition: hoverTrans }}
+          onClick={toggle}
+          onWheel={forwardScroll}
+        >
+          {theme === "dark" ? <IconSun size={20} /> : <IconMoon size={20} />}
+        </motion.button>
+
+        {/* ── Bottom line ── */}
+        <div
+          className="absolute left-0 right-0 pointer-events-none"
+          style={{ bottom: 0, height: 1.5, backgroundColor: btnBorder }}
+        />
+
+        {/* ── Triangle shadow ── */}
+        <div
+          className="absolute left-0 right-0 pointer-events-none"
+          style={{
+            bottom: -14,
+            height: 14,
+            background: isLight
+              ? "linear-gradient(to bottom, rgba(0,0,0,0.13) 0%, transparent 100%)"
+              : "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)",
+            clipPath: "polygon(15% 0%, 85% 0%, 53% 100%, 47% 100%)",
+          }}
+        />
+      </div>
     </div>
   );
 }

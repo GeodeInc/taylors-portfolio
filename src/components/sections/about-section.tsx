@@ -3,6 +3,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { IconCode, IconRocket, IconBulb, IconBrandGithub, IconBriefcase, IconUsers } from "@tabler/icons-react";
 import { TiltCard } from "@/components/ui/tilt-card";
+import { useTheme } from "@/contexts/theme-context";
 
 const stats = [
   { label: "Years Experience",  value: "4+",  icon: <IconBriefcase size={20} /> },
@@ -20,6 +21,15 @@ const cards = [
 export const AboutSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { theme } = useTheme();
+  const isLight = theme === "light";
+  const surfaceBorder = isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.05)";
+  const surfaceBg     = isLight ? "rgba(0,0,0,0.03)"  : "rgba(255,255,255,0.02)";
+  const tagBorder     = isLight ? "rgba(0,0,0,0.08)"  : "rgba(255,255,255,0.08)";
+  const tagBg         = isLight ? "rgba(0,0,0,0.03)"  : "rgba(255,255,255,0.03)";
+  const headingColor  = isLight ? "var(--navy)"        : "#ffffff";
+  const bodyColor     = isLight ? "var(--navy-dark)"   : undefined;
+  const mutedColor    = isLight ? "rgba(0,0,0,0.45)"   : undefined;
   return (
     <section id="about" className="relative bg-black py-16 overflow-hidden min-h-screen flex flex-col justify-center">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff04_1px,transparent_1px),linear-gradient(to_bottom,#ffffff04_1px,transparent_1px)] bg-[size:64px_64px]" />
@@ -33,7 +43,7 @@ export const AboutSection = () => {
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             About Me
           </span>
-          <h2 className="mt-4 text-4xl font-bold text-white md:text-5xl" style={{ fontFamily: "var(--font-sub)" }}>
+          <h2 className="mt-4 text-4xl font-bold md:text-5xl" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>
             Who I Am
           </h2>
         </motion.div>
@@ -41,14 +51,16 @@ export const AboutSection = () => {
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           <motion.div initial={{ opacity: 0, x: -30 }} animate={isInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }}
             className="flex flex-col justify-center space-y-5">
-            <p className="text-lg leading-relaxed text-neutral-200">
-              I’m Taylor — co-founder of Tenzor LLC, where we build custom web apps, POS systems, and tools for real businesses.            </p>
-            <p className="text-lg leading-relaxed text-neutral-300">
-              I study Computer Engineering at Rutgers and lead front-end and UI/UX at Tenzor, focusing on creating clean, high-quality user experiences.            </p>
+            <p className="text-lg leading-relaxed" style={{ color: bodyColor ?? "rgb(229 229 229)" }}>
+              I&apos;m Taylor — co-founder of Tenzor LLC, where we build custom web apps, POS systems, and tools for real businesses.
+            </p>
+            <p className="text-lg leading-relaxed" style={{ color: mutedColor ?? "rgb(212 212 212)" }}>
+              I study Computer Engineering at Rutgers and lead front-end and UI/UX at Tenzor, focusing on creating clean, high-quality user experiences.
+            </p>
             <div className="flex flex-wrap gap-2 pt-1">
               {["React", "Next.js", "TypeScript", "Node.js", "Python", "PostgreSQL"].map((s) => (
-                <span key={s} className="rounded-full border px-3 py-1 text-sm text-neutral-400"
-                  style={{ borderColor: "rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.03)" }}>
+                <span key={s} className="rounded-full border px-3 py-1 text-sm"
+                  style={{ borderColor: tagBorder, backgroundColor: tagBg, color: isLight ? "var(--navy-dark)" : undefined }}>
                   {s}
                 </span>
               ))}
@@ -68,7 +80,7 @@ export const AboutSection = () => {
                 className="rounded-2xl border p-5 backdrop-blur-sm"
                 style={{ borderColor: card.accentBorder, backgroundColor: card.accentBg }}>
                 <div className="mb-3" style={{ color: card.accentText }}>{card.icon}</div>
-                <h3 className="mb-1.5 font-semibold text-white" style={{ fontFamily: "var(--font-sub)" }}>{card.title}</h3>
+                <h3 className="mb-1.5 font-semibold" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>{card.title}</h3>
                 <p className="text-sm leading-relaxed text-neutral-400">{card.description}</p>
               </TiltCard>
             ))}
@@ -79,7 +91,7 @@ export const AboutSection = () => {
           className="mt-10 grid grid-cols-3 gap-5 md:grid-cols-3">
           {stats.map((s) => (
             <div key={s.label} className="flex flex-col items-center rounded-2xl border p-6 text-center"
-              style={{ borderColor: "rgba(255,255,255,0.05)", backgroundColor: "rgba(255,255,255,0.02)" }}>
+              style={{ borderColor: surfaceBorder, backgroundColor: surfaceBg }}>
               <div style={{ color: "var(--navy)" }}>{s.icon}</div>
               <div className="mt-2 text-3xl font-bold"
                 style={{ background: "linear-gradient(135deg, var(--navy), var(--navy-dark))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>

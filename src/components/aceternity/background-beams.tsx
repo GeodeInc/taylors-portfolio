@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { usePreviewMode } from "@/contexts/preview-mode-context";
 
 const DURATIONS = [18.3,14.7,22.1,12.4,19.9,16.2,24.8,11.5,17.1,21.3,13.6,20.0,15.4,23.2,10.8,18.7,25.1,14.3,19.6,16.9];
 const DELAYS    = [ 2.3, 5.7, 1.1, 8.4, 3.9, 6.2, 0.8, 4.5, 7.1, 2.8, 5.3, 9.0, 1.6, 7.8, 3.2, 6.5, 0.3, 4.9, 8.7, 1.9];
@@ -28,7 +29,10 @@ const paths = [
   "M-247 -341C-247 -341 -179 64 285 191C749 318 817 723 817 723",
 ];
 
-export const BackgroundBeams = ({ className }: { className?: string }) => (
+export const BackgroundBeams = ({ className }: { className?: string }) => {
+  const isPreview = usePreviewMode();
+  if (isPreview) return null;
+  return (
   <div className={cn("absolute inset-0 flex items-center justify-center overflow-hidden", className)}>
     <svg className="pointer-events-none absolute inset-0 h-full w-full" width="100%" height="100%"
       viewBox="0 0 696 316" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -50,4 +54,5 @@ export const BackgroundBeams = ({ className }: { className?: string }) => (
       </defs>
     </svg>
   </div>
-);
+  );
+};

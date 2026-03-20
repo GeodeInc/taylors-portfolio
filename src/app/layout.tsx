@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins, Geist_Mono, Chango, Jua } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/contexts/theme-context";
 
 const poppins = Poppins({
   variable: "--font-sans",
@@ -66,9 +67,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${poppins.variable} ${chango.variable} ${jua.variable} ${geistMono.variable} antialiased bg-black overflow-x-hidden`}
+        className={`${poppins.variable} ${chango.variable} ${jua.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
+        style={{ backgroundColor: "var(--page-bg)" }}
       >
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
