@@ -16,6 +16,7 @@ interface ImagesBadgeProps {
   direction?: "up" | "down";
   onOpenChange?: (open: boolean) => void;
   closeRef?: React.MutableRefObject<(() => void) | null>;
+  forceOpen?: boolean;
 }
 
 export function ImagesBadge({
@@ -30,8 +31,10 @@ export function ImagesBadge({
   direction = "down",
   onOpenChange,
   closeRef,
+  forceOpen = false,
 }: ImagesBadgeProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const hoveredState = isHovered || forceOpen;
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -96,12 +99,12 @@ export function ImagesBadge({
               cursor: "pointer",
             }}
             animate={{
-              x: `calc(-50% + ${isHovered ? offsetX : 0}px)`,
-              y: isHovered ? sign * hoverOffsetY : 0,
-              rotate: isHovered ? rotation : 0,
-              width: isHovered ? hoverImageSize.width : 0,
-              height: isHovered ? hoverImageSize.height : 0,
-              opacity: isHovered ? 1 : 0,
+              x: `calc(-50% + ${hoveredState ? offsetX : 0}px)`,
+              y: hoveredState ? sign * hoverOffsetY : 0,
+              rotate: hoveredState ? rotation : 0,
+              width: hoveredState ? hoverImageSize.width : 0,
+              height: hoveredState ? hoverImageSize.height : 0,
+              opacity: hoveredState ? 1 : 0,
               scale: isActive ? 1.06 : 1,
             }}
             transition={{ type: "spring", stiffness: 300, damping: 28, delay: index * 0.04 }}
@@ -132,7 +135,7 @@ export function ImagesBadge({
         </div>
         <motion.div
           className="absolute inset-x-0 bottom-0 h-[85%] origin-bottom rounded-[4px] bg-gradient-to-b from-amber-300 to-amber-400 shadow-sm"
-          animate={{ rotateX: isHovered ? -45 : -25, scaleY: isHovered ? 0.8 : 1 }}
+          animate={{ rotateX: hoveredState ? -45 : -25, scaleY: hoveredState ? 0.8 : 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
           style={{ transformStyle: "preserve-3d", zIndex: 20 }}
         >

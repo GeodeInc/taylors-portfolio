@@ -409,25 +409,25 @@ export const ProjectsSection = () => {
   );
 
   return (
-    <section id="projects" className="relative bg-black py-16 overflow-hidden min-h-screen flex flex-col justify-center">
+    <section id="projects" className="relative bg-black py-8 lg:py-16 overflow-hidden min-h-screen flex flex-col justify-center">
       {modal}
       <div className="absolute right-0 top-0 h-[400px] w-[400px] rounded-full blur-3xl"
         style={{ background: "radial-gradient(circle, var(--navy-glow-sm) 0%, transparent 70%)" }} />
       <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full blur-3xl"
         style={{ background: "radial-gradient(circle, var(--navy-fill-xs) 0%, transparent 70%)" }} />
-      <div ref={ref} className="relative z-10 mx-auto max-w-7xl px-6 pt-20">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="mb-8 text-center">
+      <div ref={ref} className="relative z-10 mx-auto max-w-7xl px-4 md:px-6 pt-4 md:pt-8 lg:pt-20">
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="mb-4 md:mb-8 text-center">
           <span className="mb-4 inline-block rounded-full border px-4 py-1.5 text-sm font-medium"
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             Projects
           </span>
-          <h2 className="mt-4 text-4xl font-bold md:text-5xl" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>
+          <h2 className="mt-3 text-3xl font-bold md:text-4xl lg:text-5xl" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>
             Things I&apos;ve Built
           </h2>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }}>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {projects.map((p) => (
               <motion.li
                 layoutId={`card-${p.title}-${id}`}
@@ -439,7 +439,7 @@ export const ProjectsSection = () => {
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
                 <motion.div layoutId={`header-${p.title}-${id}`}>
-                  <div className="w-full h-40">
+                  <div className="w-full h-28 md:h-40">
                     {p.header}
                   </div>
                 </motion.div>
@@ -468,7 +468,7 @@ export const ProjectsSection = () => {
           </ul>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ duration: 0.6, delay: 0.5 }} className="mt-12 text-center">
+        <motion.div initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ duration: 0.6, delay: 0.5 }} className="mt-6 md:mt-12 text-center">
           <Magnetic>
             <a href="https://github.com/GeodeInc" target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-6 py-3 text-sm font-medium text-neutral-400 transition-all hover:text-white hover:bg-white/[0.07] hover:scale-[1.05] hover:border-white/[0.15] active:scale-[0.97]">

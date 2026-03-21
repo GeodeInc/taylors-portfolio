@@ -67,13 +67,13 @@ export const SkillsSection = () => {
   const tagBg      = isLight ? "rgba(0,0,0,0.04)"  : "rgba(255,255,255,0.04)";
   const tagColor   = isLight ? "var(--navy-dark)"  : undefined;
   return (
-    <section id="skills" className="relative bg-black py-16 overflow-x-hidden min-h-screen flex flex-col justify-center">
+    <section id="skills" className="relative bg-black py-8 lg:py-16 overflow-x-hidden min-h-screen flex flex-col justify-center">
       <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
         style={{ background: "radial-gradient(circle, var(--navy-glow) 0%, transparent 70%)" }} />
 
-      <div ref={ref} className="relative z-10 w-full mx-auto max-w-7xl px-6 pt-20">
+      <div ref={ref} className="relative z-10 w-full mx-auto max-w-7xl px-4 md:px-6 pt-4 md:pt-8 lg:pt-20">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}
-          className="mb-8 text-center">
+          className="mb-4 md:mb-8 text-center">
           <span className="mb-4 inline-block rounded-full border px-4 py-1.5 text-sm font-medium"
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             Skills & Tech
@@ -90,7 +90,7 @@ export const SkillsSection = () => {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          className="mt-6 md:mt-10 grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
           {categories.map((cat) => (
             <div key={cat.label} className="rounded-2xl border p-5"
               style={{ borderColor: cardBorder, backgroundColor: cardBg }}>

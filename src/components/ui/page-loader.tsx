@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { AnimatePresence, MotionConfig, motion, useAnimation } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { IconHome2, IconUser, IconCode, IconMail, IconSun, IconMoon } from "@tabler/icons-react";
+import { IconSun, IconMoon } from "@tabler/icons-react";
 import { ImagesBadge } from "@/components/ui/images-badge";
 import { useTheme } from "@/contexts/theme-context";
 import { PreviewModeContext } from "@/contexts/preview-mode-context";
@@ -93,10 +93,10 @@ function SectionPreview({ section }: { section: string }) {
 }
 
 const NAV_ICONS = [
-  { id: "home",    icon: <IconHome2 size={24} />, label: "Home"    },
-  { id: "about",   icon: <IconUser size={24} />,  label: "About"   },
-  { id: "skills",  icon: <IconCode size={24} />,  label: "Skills"  },
-  { id: "contact", icon: <IconMail size={24} />,  label: "Contact" },
+  { id: "home",    icon: <span className="text-base md:text-xl leading-none">🏠</span>, label: "Home"    },
+  { id: "about",   icon: <span className="text-base md:text-xl leading-none">🙋</span>, label: "About"   },
+  { id: "skills",  icon: <span className="text-base md:text-xl leading-none">⚡</span>, label: "Skills"  },
+  { id: "contact", icon: <span className="text-base md:text-xl leading-none">✉️</span>, label: "Contact" },
 ];
 
 const PROJECT_PREVIEWS = [
@@ -384,8 +384,10 @@ function ScatteredNav() {
   const muted     = isLight ? "rgba(0,0,0,0.35)"          : "rgba(255,255,255,0.35)";
   const [mounted, setMounted] = useState(false);
   const [onHero, setOnHero] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const [reanimKey, setReanimKey] = useState(0);
+  const [folderHovered, setFolderHovered] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
   const previewsOpen = useRef(false);
   const closePreviewsRef = useRef<(() => void) | null>(null);
@@ -393,6 +395,12 @@ function ScatteredNav() {
   const wheelAccum = useRef(0);
 
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    const handler = (e: Event) => setFolderHovered((e as CustomEvent<{ open: boolean }>).detail.open);
+    window.addEventListener("projects-folder-hover", handler);
+    return () => window.removeEventListener("projects-folder-hover", handler);
+  }, []);
 
   useEffect(() => {
     const handler = () => setReanimKey(k => k + 1);
@@ -435,10 +443,20 @@ function ScatteredNav() {
       if (previewsOpen.current) return;
       const scrollTop = scrollEl ? scrollEl.scrollTop : 0;
       const height = window.innerHeight;
-      const heroOffset = height * 0.72 - 56;
-      const ratio = Math.min(scrollTop / height, 1);
-      const translateY = heroOffset * (1 - ratio);
-      if (navRef.current) navRef.current.style.transform = `translateY(${translateY}px)`;
+      const width = window.innerWidth;
+      const desktop = width >= 768 && height >= 600;
+      setIsDesktop(desktop);
+      if (desktop) {
+        // Desktop: slide nav from bottom (hero) to top as user scrolls
+        // top-4 = 16px, bottom-6 = 24px, nav height ≈ 44px → offset = height - 84
+        const heroOffset = height - 84;
+        const ratio = Math.min(scrollTop / height, 1);
+        const translateY = heroOffset * (1 - ratio);
+        if (navRef.current) navRef.current.style.transform = `translateY(${translateY}px)`;
+      } else {
+        // Mobile/short: always at top, no translation
+        if (navRef.current) navRef.current.style.transform = "translateY(0px)";
+      }
       setOnHero(scrollTop < height * 0.5);
       const sectionIdx = Math.min(Math.round(scrollTop / height), 4);
       const found = Object.keys(SECTION_INDEX).find(k => SECTION_INDEX[k] === sectionIdx);
@@ -447,7 +465,11 @@ function ScatteredNav() {
     onScroll();
     const target = scrollEl ?? window;
     target.addEventListener("scroll", onScroll, { passive: true });
-    return () => target.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      target.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, [mounted]);
 
   if (!mounted) return null;
@@ -471,8 +493,8 @@ function ScatteredNav() {
   return (
     <div
       ref={navRef}
-      className="fixed top-14 right-4 md:right-0 md:left-0 md:justify-center z-[5000] flex pointer-events-none"
-      style={{ willChange: "transform" }}
+      className="fixed top-4 right-2 md:right-0 md:inset-x-0 md:justify-center flex pointer-events-none"
+      style={{ willChange: "transform", zIndex: folderHovered ? 6001 : 5000 }}
     >
       <div className="relative flex items-end pointer-events-auto">
         {/* ── Nav icons ── */}
@@ -481,7 +503,7 @@ function ScatteredNav() {
             key={`${item.id}-${reanimKey}`}
             title={item.label}
             disabled={activeSection === item.id}
-            className="relative flex flex-col items-center px-4 py-2"
+            className="relative flex flex-col items-center px-2 md:px-4 py-2"
             style={{ color: activeSection === item.id ? btnColor : muted, cursor: activeSection === item.id ? "default" : "pointer" }}
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -507,7 +529,7 @@ function ScatteredNav() {
           key={`projects-${reanimKey}`}
           title="Projects"
           disabled={activeSection === "projects"}
-          className="relative flex flex-col items-center px-4 py-2"
+          className="relative flex flex-col items-center px-2 md:px-4 py-2"
           style={{ color: activeSection === "projects" ? btnColor : muted, zIndex: 5001, cursor: activeSection === "projects" ? "default" : "pointer" }}
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -523,8 +545,11 @@ function ScatteredNav() {
             hoverSpread={100}
             hoverRotation={14}
             hoverOffsetY={64}
-            direction={onHero ? "up" : "down"}
-            onOpenChange={(open) => { previewsOpen.current = open; }}
+            direction={onHero && isDesktop ? "up" : "down"}
+            onOpenChange={(open) => {
+              previewsOpen.current = open;
+              window.dispatchEvent(new CustomEvent("projects-folder-hover", { detail: { open } }));
+            }}
             closeRef={closePreviewsRef}
           />
           {activeSection === "projects" && (
@@ -565,7 +590,14 @@ function ScatteredNav() {
         {/* ── Triangle shadow ── */}
         <div
           className="absolute left-0 right-0 pointer-events-none"
-          style={{
+          style={onHero && isDesktop ? {
+            top: -14,
+            height: 14,
+            background: isLight
+              ? "linear-gradient(to top, rgba(0,0,0,0.13) 0%, transparent 100%)"
+              : "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)",
+            clipPath: "polygon(47% 0%, 53% 0%, 85% 100%, 15% 100%)",
+          } : {
             bottom: -14,
             height: 14,
             background: isLight

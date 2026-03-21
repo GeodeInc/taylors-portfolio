@@ -31,26 +31,26 @@ export const AboutSection = () => {
   const bodyColor     = isLight ? "var(--navy-dark)"   : undefined;
   const mutedColor    = isLight ? "rgba(0,0,0,0.45)"   : undefined;
   return (
-    <section id="about" className="relative bg-black py-16 overflow-hidden min-h-screen flex flex-col justify-center">
+    <section id="about" className="relative bg-black py-8 lg:py-16 overflow-hidden min-h-screen flex flex-col justify-center">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff04_1px,transparent_1px),linear-gradient(to_bottom,#ffffff04_1px,transparent_1px)] bg-[size:64px_64px]" />
       <div className="absolute left-1/4 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full blur-3xl"
         style={{ background: "radial-gradient(circle, var(--navy-glow-sm) 0%, transparent 70%)" }} />
 
-      <div ref={ref} className="relative z-10 mx-auto max-w-7xl px-6 pt-20">
+      <div ref={ref} className="relative z-10 mx-auto max-w-7xl px-4 md:px-6 pt-4 md:pt-8 lg:pt-20">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}
-          className="mb-8 text-center">
+          className="mb-4 md:mb-8 text-center">
           <span className="mb-4 inline-block rounded-full border px-4 py-1.5 text-sm font-medium"
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             About Me
           </span>
-          <h2 className="mt-4 text-4xl font-bold md:text-5xl" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>
+          <h2 className="mt-3 text-3xl font-bold md:text-4xl lg:text-5xl" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>
             Who I Am
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:gap-12 lg:grid-cols-2">
           <motion.div initial={{ opacity: 0, x: -30 }} animate={isInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-col justify-center space-y-5">
+            className="flex flex-col justify-center space-y-3 md:space-y-5">
             <p className="text-lg leading-relaxed" style={{ color: bodyColor ?? "rgb(229 229 229)" }}>
               I&apos;m Taylor — co-founder of Tenzor LLC, where we build custom web apps, POS systems, and tools for real businesses.
             </p>
@@ -74,10 +74,10 @@ export const AboutSection = () => {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 30 }} animate={isInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.3 }}
-            className="grid grid-cols-2 gap-4">
+            className="grid grid-cols-2 gap-2 md:gap-4">
             {cards.map((card) => (
               <TiltCard key={card.title}
-                className="rounded-2xl border p-5 backdrop-blur-sm"
+                className="rounded-2xl border p-3 md:p-5 backdrop-blur-sm"
                 style={{ borderColor: card.accentBorder, backgroundColor: card.accentBg }}>
                 <div className="mb-3" style={{ color: card.accentText }}>{card.icon}</div>
                 <h3 className="mb-1.5 font-semibold" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>{card.title}</h3>
@@ -88,16 +88,16 @@ export const AboutSection = () => {
         </div>
 
         <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-10 grid grid-cols-3 gap-5 md:grid-cols-3">
+          className="mt-6 md:mt-10 grid grid-cols-3 gap-3 md:gap-5">
           {stats.map((s) => (
-            <div key={s.label} className="flex flex-col items-center rounded-2xl border p-6 text-center"
+            <div key={s.label} className="flex flex-col items-center rounded-2xl border p-3 md:p-6 text-center"
               style={{ borderColor: surfaceBorder, backgroundColor: surfaceBg }}>
               <div style={{ color: "var(--navy)" }}>{s.icon}</div>
-              <div className="mt-2 text-3xl font-bold"
+              <div className="mt-1 text-xl md:text-3xl font-bold"
                 style={{ background: "linear-gradient(135deg, var(--navy), var(--navy-dark))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 {s.value}
               </div>
-              <div className="mt-1 text-sm text-neutral-600">{s.label}</div>
+              <div className="mt-0.5 text-xs md:text-sm text-neutral-600">{s.label}</div>
             </div>
           ))}
         </motion.div>

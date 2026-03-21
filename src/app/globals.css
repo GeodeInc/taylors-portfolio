@@ -248,7 +248,9 @@ section {
 .light body { background-color: var(--page-bg); }
 
 .light section.bg-black,
-.light section[class*="bg-black"] {
+.light section[class*="bg-black"],
+.light main.bg-black,
+.light div.bg-black {
   background-color: var(--page-bg) !important;
 }
 
@@ -280,3 +282,9 @@ section {
 .light .to-white\/\[0\.02\]    { --tw-gradient-to:   rgba(0,0,0,0.01) !important; }
 .light .border-white\/\[0\.1\] { border-color: rgba(0,0,0,0.1) !important; }
 .light .text-white\/80         { color: rgba(15,23,42,0.8) !important; }
+
+/* SVG mask cursor reveal — initial state hides the reveal layer.
+   Using CSS (not React style prop) so JS rAF writes are never overwritten by React re-renders. */
+.svg-mask-reveal {
+  clip-path: circle(0px at 50% 50%);
+}

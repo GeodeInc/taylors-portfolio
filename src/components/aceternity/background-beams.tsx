@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { usePreviewMode } from "@/contexts/preview-mode-context";
+import { useTheme } from "@/contexts/theme-context";
 
 const DURATIONS = [18.3,14.7,22.1,12.4,19.9,16.2,24.8,11.5,17.1,21.3,13.6,20.0,15.4,23.2,10.8,18.7,25.1,14.3,19.6,16.9];
 const DELAYS    = [ 2.3, 5.7, 1.1, 8.4, 3.9, 6.2, 0.8, 4.5, 7.1, 2.8, 5.3, 9.0, 1.6, 7.8, 3.2, 6.5, 0.3, 4.9, 8.7, 1.9];
@@ -31,7 +32,12 @@ const paths = [
 
 export const BackgroundBeams = ({ className }: { className?: string }) => {
   const isPreview = usePreviewMode();
+  const { theme } = useTheme();
   if (isPreview) return null;
+  const isLight = theme === "light";
+  const beam1 = isLight ? "var(--navy)"      : "var(--sage)";
+  const beam2 = isLight ? "var(--navy-dark)" : "var(--sage-deep)";
+  const beam3 = isLight ? "var(--navy-dark)" : "var(--navy)";
   return (
   <div className={cn("absolute inset-0 flex items-center justify-center overflow-hidden", className)}>
     <svg className="pointer-events-none absolute inset-0 h-full w-full" width="100%" height="100%"
@@ -45,10 +51,10 @@ export const BackgroundBeams = ({ className }: { className?: string }) => {
             initial={{ x1: "0%", x2: "0%", y1: "0%", y2: "0%" }}
             animate={{ x1: ["0%","100%"], x2: ["0%","95%"], y1: ["0%","100%"], y2: ["0%","97%"] }}
             transition={{ duration: DURATIONS[index], ease: "easeInOut", repeat: Infinity, delay: DELAYS[index] }}>
-            <stop stopColor="var(--sage)" stopOpacity="0" />
-            <stop stopColor="var(--sage)" />
-            <stop offset="32.5%" stopColor="var(--sage-deep)" />
-            <stop offset="100%" stopColor="var(--navy)" stopOpacity="0" />
+            <stop stopColor={beam1} stopOpacity="0" />
+            <stop stopColor={beam1} />
+            <stop offset="32.5%" stopColor={beam2} />
+            <stop offset="100%" stopColor={beam3} stopOpacity="0" />
           </motion.linearGradient>
         ))}
       </defs>

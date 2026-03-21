@@ -57,21 +57,21 @@ export const ContactSection = () => {
   const footerBorder = isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.04)";
 
   return (
-    <section id="contact" className="relative bg-black py-16 overflow-hidden min-h-screen flex flex-col justify-center">
+    <section id="contact" className="relative bg-black py-8 lg:py-16 overflow-hidden min-h-screen flex flex-col justify-center">
       <BackgroundBeams />
 
-      <div ref={ref} className="relative z-10 mx-auto max-w-4xl px-6 pt-20">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="mb-8 text-center">
+      <div ref={ref} className="relative z-10 mx-auto max-w-4xl px-4 md:px-6 pt-4 md:pt-8 lg:pt-20">
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="mb-4 md:mb-8 text-center">
           <span className="mb-4 inline-block rounded-full border px-4 py-1.5 text-sm font-medium"
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             Contact
           </span>
-          <h2 className="mt-4 text-4xl font-bold md:text-5xl" style={{ fontFamily: "var(--font-sub)", color: isLight ? "var(--navy)" : "#ffffff" }}>
+          <h2 className="mt-3 text-3xl font-bold md:text-4xl lg:text-5xl" style={{ fontFamily: "var(--font-sub)", color: isLight ? "var(--navy)" : "#ffffff" }}>
             Let&apos;s Work Together
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:gap-12 lg:grid-cols-2">
           <motion.div initial={{ opacity: 0, x: -30 }} animate={isInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }}>
             <form onSubmit={handleSubmit} className="space-y-4">
               {[
@@ -91,7 +91,7 @@ export const ContactSection = () => {
               ))}
               <div>
                 <label className="mb-2 block text-sm font-medium text-neutral-500">Message</label>
-                <textarea required rows={5} value={form.message}
+                <textarea required rows={4} value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   className="w-full rounded-xl border px-4 py-3 placeholder-neutral-700 outline-none transition-all resize-none"
                   style={inputBase}
@@ -115,7 +115,7 @@ export const ContactSection = () => {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 30 }} animate={isInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col justify-between space-y-8">
+            className="flex flex-col justify-between space-y-4 md:space-y-8">
             <div>
               <h3 className="mb-2 text-lg font-semibold" style={{ fontFamily: "var(--font-sub)", color: isLight ? "var(--navy)" : "#ffffff" }}>Get in touch</h3>
               <p className="text-neutral-400">
@@ -146,7 +146,7 @@ export const ContactSection = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border p-6"
+            <div className="rounded-2xl border p-4 md:p-6"
               style={{ borderColor: "var(--navy-border-sm)", backgroundColor: "var(--navy-fill-xs)" }}>
               <div className="mb-2 flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
@@ -163,7 +163,7 @@ export const ContactSection = () => {
         </div>
       </div>
 
-      <div className="relative z-10 mt-24 border-t pt-8 text-center" style={{ borderColor: footerBorder }}>
+      <div className="relative z-10 mt-8 md:mt-24 border-t pt-6 md:pt-8 text-center" style={{ borderColor: footerBorder }}>
         <p className="text-sm text-neutral-700">
           © 2025 Taylor Houghtaling. Built with Next.js, Framer Motion & Tailwind CSS.
         </p>
