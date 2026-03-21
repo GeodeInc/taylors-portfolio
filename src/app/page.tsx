@@ -11,11 +11,11 @@ export default function Home() {
     <PageLoader>
       <main className="bg-black h-screen overflow-y-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <GeodeBrand />
-        <div className="md:sticky md:top-0 z-[1] md:min-h-screen"><HeroSection /></div>
-        <div className="md:sticky md:top-0 z-[2] md:min-h-screen bg-black"><AboutSection /></div>
-        <div className="md:sticky md:top-0 z-[3] md:min-h-screen bg-black"><SkillsSection /></div>
-        <div className="md:sticky md:top-0 z-[4] md:min-h-screen bg-black"><ProjectsSection /></div>
-        <div className="md:sticky md:top-0 z-[5] md:min-h-screen bg-black"><ContactSection /></div>
+        <div className="md:sticky md:top-0 z-[1] md:h-screen md:overflow-hidden"><HeroSection /></div>
+        <div className="md:sticky md:top-0 z-[2] md:h-screen md:overflow-hidden bg-black"><AboutSection /></div>
+        <div className="md:sticky md:top-0 z-[3] md:h-screen md:overflow-hidden bg-black"><SkillsSection /></div>
+        <div className="md:sticky md:top-0 z-[4] md:h-screen md:overflow-hidden bg-black"><ProjectsSection /></div>
+        <div className="md:sticky md:top-0 z-[5] md:h-screen md:overflow-hidden bg-black"><ContactSection /></div>
       </main>
     </PageLoader>
   );
