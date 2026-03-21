@@ -347,7 +347,7 @@ function NavTransitionOverlay() {
       {/* Labels — one per card, always visible during animating phase */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        animate={{ opacity: (expanding || shrinking) ? 0 : 1 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 0.25 }}
       >
         <div className="relative" style={{ width: 480, height: 300, overflow: "visible" }}>
