@@ -536,9 +536,10 @@ export const HeroSection = () => {
 };
 
 // ─── useWordCycler ────────────────────────────────────────────────────────────
-// Cycles through words. On each interval: triggers encrypt-out, then on
-// completion advances to the next word and starts reveal.
-function useWordCycler(words: string[], intervalMs = 4500) {
+// Each cycle: reveal word → pause → encrypt-out → next word → repeat.
+// Uses a per-word timeout (not a fixed interval) so each phase fully completes
+// before the next begins. revealDelayMs must match what's passed to EncryptedText.
+function useWordCycler(words: string[], displayMs = 2000, revealDelayMs = 80) {
   const [idx, setIdx] = React.useState(0);
   const [encryptOut, setEncryptOut] = React.useState(false);
   const [ready, setReady] = React.useState(
@@ -550,14 +551,13 @@ function useWordCycler(words: string[], intervalMs = 4500) {
     window.addEventListener("intro-done", handler);
     return () => window.removeEventListener("intro-done", handler);
   }, [ready]);
+  // Re-runs whenever idx changes (new word) — waits for reveal + display time, then encrypts out
   React.useEffect(() => {
     if (!ready) return;
-    let timeout: ReturnType<typeof setTimeout>;
-    const timer = setInterval(() => {
-      timeout = setTimeout(() => setEncryptOut(true), 1200);
-    }, intervalMs);
-    return () => { clearInterval(timer); clearTimeout(timeout); };
-  }, [ready, intervalMs]);
+    const revealDuration = words[idx].length * revealDelayMs;
+    const timer = setTimeout(() => setEncryptOut(true), revealDuration + displayMs);
+    return () => clearTimeout(timer);
+  }, [ready, idx, displayMs, revealDelayMs, words]);
   const onEncryptComplete = React.useCallback(() => {
     setEncryptOut(false);
     setIdx(i => (i + 1) % words.length);
