@@ -114,9 +114,11 @@ interface HeroLayerProps {
   canvasRef?: React.RefObject<HTMLCanvasElement | null>;
   canvasOpacity?: number;
   text: string;
+  encryptOut?: boolean;
+  onEncryptComplete?: () => void;
 }
 
-const HeroLayer = ({ isLight, canvasRef, canvasOpacity = 1, text }: HeroLayerProps) => {
+const HeroLayer = ({ isLight, canvasRef, canvasOpacity = 1, text, encryptOut, onEncryptComplete }: HeroLayerProps) => {
   const { fg, fgMuted, iconBase, iconBorder } = heroColors(isLight);
   const mo = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5 } };
 
@@ -186,7 +188,7 @@ const HeroLayer = ({ isLight, canvasRef, canvasOpacity = 1, text }: HeroLayerPro
         {/* Encrypted cycling text */}
         <motion.div {...mo} transition={{ ...mo.transition, delay: 0.2 }} className="mt-2 md:mt-4">
           <div style={{ fontSize: "clamp(0.85rem, 3.8vw, 1.875rem)", fontFamily: "var(--font-sub)", color: isLight ? "#889672" : "#2a5298" }}>
-            <EncryptedText text={text} revealDelayMs={45} flipDelayMs={40} encryptedClassName="opacity-35" />
+            <EncryptedText text={text} revealDelayMs={80} flipDelayMs={60} encryptedClassName="opacity-35" encryptOut={encryptOut} onEncryptComplete={onEncryptComplete} />
           </div>
         </motion.div>
 
@@ -251,6 +253,7 @@ interface StaticHeroRevealProps {
   isLight: boolean; // the theme SHOWN inside the circle (opposite of the current page theme)
   canvasRef?: React.RefObject<HTMLCanvasElement | null>;
   text: string;
+  encryptOut?: boolean;
 }
 
 const NAV_ITEMS = [
@@ -260,7 +263,7 @@ const NAV_ITEMS = [
   { id: "contact", icon: <span className="text-xl leading-none">✉️</span> },
 ];
 
-const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) => {
+const StaticHeroReveal = ({ isLight, canvasRef, text, encryptOut }: StaticHeroRevealProps) => {
   const [folderOpen, setFolderOpen] = React.useState(false);
   const [btnHovered, setBtnHovered] = React.useState(false);
   const btnRef = React.useRef<HTMLSpanElement>(null);
@@ -395,7 +398,7 @@ const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) =
         {/* Encrypted text — synced word with base layer */}
         <div className="mt-4">
           <div style={{ fontSize: "clamp(0.85rem, 3.8vw, 1.875rem)", fontFamily: "var(--font-sub)", color: isLight ? "#889672" : "#2a5298" }}>
-            <EncryptedText text={text} revealDelayMs={45} flipDelayMs={40} encryptedClassName="opacity-35" />
+            <EncryptedText text={text} revealDelayMs={80} flipDelayMs={60} encryptedClassName="opacity-35" encryptOut={encryptOut} />
           </div>
         </div>
 
@@ -517,26 +520,27 @@ export const HeroSection = () => {
 
   // Shared word — both layers receive the same string so EncryptedText decodes in sync
   const WORDS = ["UI/UX Developer at TenzorLLC", "Co-Founder & Full Stack Dev", "Computer Engineering @ Rutgers"];
-  const twText = useWordCycler(WORDS);
+  const { word: twText, encryptOut, onEncryptComplete } = useWordCycler(WORDS);
 
   return (
     <section id="home" className="relative w-full overflow-hidden" style={{ backgroundColor: isLight ? "#f5f4f0" : "#000000" }}>
       <SvgMaskEffect
         revealSize={80}
         enabled={onHero && !isMobile}
-        revealChildren={<StaticHeroReveal isLight={!isLight} canvasRef={revealCanvasRef} text={twText} />}
+        revealChildren={<StaticHeroReveal isLight={!isLight} canvasRef={revealCanvasRef} text={twText} encryptOut={encryptOut} />}
       >
-        <HeroLayer isLight={isLight} canvasRef={canvasRef} canvasOpacity={canvasOpacity} text={twText} />
+        <HeroLayer isLight={isLight} canvasRef={canvasRef} canvasOpacity={canvasOpacity} text={twText} encryptOut={encryptOut} onEncryptComplete={onEncryptComplete} />
       </SvgMaskEffect>
     </section>
   );
 };
 
 // ─── useWordCycler ────────────────────────────────────────────────────────────
-// Cycles through words on a fixed interval. EncryptedText re-decodes each time
-// the word changes. Waits for the page-loader intro to finish before starting.
-function useWordCycler(words: string[], intervalMs = 3500) {
+// Cycles through words. On each interval: triggers encrypt-out, then on
+// completion advances to the next word and starts reveal.
+function useWordCycler(words: string[], intervalMs = 4500) {
   const [idx, setIdx] = React.useState(0);
+  const [encryptOut, setEncryptOut] = React.useState(false);
   const [ready, setReady] = React.useState(
     () => typeof sessionStorage !== "undefined" && sessionStorage.getItem("intro-played") === "1"
   );
@@ -548,8 +552,12 @@ function useWordCycler(words: string[], intervalMs = 3500) {
   }, [ready]);
   React.useEffect(() => {
     if (!ready) return;
-    const timer = setInterval(() => setIdx(i => (i + 1) % words.length), intervalMs);
+    const timer = setInterval(() => setEncryptOut(true), intervalMs);
     return () => clearInterval(timer);
-  }, [ready, words.length, intervalMs]);
-  return words[idx];
+  }, [ready, intervalMs]);
+  const onEncryptComplete = React.useCallback(() => {
+    setEncryptOut(false);
+    setIdx(i => (i + 1) % words.length);
+  }, [words.length]);
+  return { word: words[idx], encryptOut, onEncryptComplete };
 }
