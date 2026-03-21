@@ -71,8 +71,10 @@ export const MagneticGlobal = ({
       const cy = rect.top + rect.height / 2;
       const dx = e.clientX - cx;
       const dy = e.clientY - cy;
-      const threshold = Math.max(rect.width, rect.height) * 1.5;
-      if (Math.sqrt(dx * dx + dy * dy) < threshold) {
+      // Activate only when cursor is within the element bounds (same as onMouseMove)
+      const hw = rect.width / 2;
+      const hh = rect.height / 2;
+      if (Math.abs(dx) <= hw && Math.abs(dy) <= hh) {
         x.set(dx * strength);
         y.set(dy * strength);
       } else {
