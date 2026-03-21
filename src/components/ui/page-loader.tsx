@@ -416,6 +416,7 @@ function ScatteredNav() {
     let resetTimer: ReturnType<typeof setTimeout>;
 
     const onWheel = (e: WheelEvent) => {
+      if (window.innerWidth < 768) return; // natural scroll on mobile
       e.preventDefault();
       if (scrollingRef.current) return;
       wheelAccum.current += e.deltaY;

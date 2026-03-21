@@ -447,7 +447,15 @@ export const HeroSection = () => {
   const isLight         = theme === "light";
   const [canvasOpacity, setCanvasOpacity] = React.useState(1);
   const [onHero, setOnHero] = React.useState(true);
+  const [isMobile, setIsMobile] = React.useState(false);
   const navTargetRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Disable reveal when scrolled off the hero section
   useEffect(() => {
@@ -497,7 +505,7 @@ export const HeroSection = () => {
     <section id="home" className="relative w-full overflow-hidden" style={{ backgroundColor: isLight ? "#f5f4f0" : "#000000" }}>
       <SvgMaskEffect
         revealSize={80}
-        enabled={onHero}
+        enabled={onHero && !isMobile}
         revealChildren={<StaticHeroReveal isLight={!isLight} canvasRef={revealCanvasRef} text={twText} />}
       >
         <HeroLayer isLight={isLight} canvasRef={canvasRef} canvasOpacity={canvasOpacity} text={twText} />
