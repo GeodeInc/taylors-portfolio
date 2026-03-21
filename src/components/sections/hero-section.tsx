@@ -390,27 +390,31 @@ const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) =
 
         {/* CTAs */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <span className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold"
-            style={{
-              backgroundColor: btnBg,
-              color: "#ffffff",
-              border: isLight ? "1px solid rgba(30,63,122,0.55)" : "1px solid rgba(136,150,114,0.55)",
-              boxShadow: isLight
-                ? "0 4px 20px rgba(30,63,122,0.55), 0 8px 40px rgba(30,63,122,0.28)"
-                : "0 4px 20px rgba(136,150,114,0.55), 0 8px 40px rgba(136,150,114,0.28)",
-              fontFamily: "var(--font-sub)",
-            }}>
-            View My Work →
-          </span>
-          <span className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold"
-            style={{
-              border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.04)",
-              color: nameCol,
-              fontFamily: "var(--font-sub)",
-            }}>
-            Get In Touch
-          </span>
+          <Magnetic>
+            <span className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold"
+              style={{
+                backgroundColor: btnBg,
+                color: "#ffffff",
+                border: isLight ? "1px solid rgba(30,63,122,0.55)" : "1px solid rgba(136,150,114,0.55)",
+                boxShadow: isLight
+                  ? "0 4px 20px rgba(30,63,122,0.55), 0 8px 40px rgba(30,63,122,0.28)"
+                  : "0 4px 20px rgba(136,150,114,0.55), 0 8px 40px rgba(136,150,114,0.28)",
+                fontFamily: "var(--font-sub)",
+              }}>
+              View My Work →
+            </span>
+          </Magnetic>
+          <Magnetic>
+            <span className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold"
+              style={{
+                border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.04)",
+                color: nameCol,
+                fontFamily: "var(--font-sub)",
+              }}>
+              Get In Touch
+            </span>
+          </Magnetic>
         </div>
 
         {/* Social icons */}
@@ -420,15 +424,17 @@ const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) =
             <IconBrandLinkedin key="li" size={18} />,
             <IconMail key="mail" size={18} />,
           ].map((icon, i) => (
-            <span key={i}
-              className="flex h-10 w-10 items-center justify-center rounded-full"
-              style={{
-                border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.04)",
-                color: isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)",
-              }}>
-              {icon}
-            </span>
+            <Magnetic key={i} strength={0.5}>
+              <span
+                className="flex h-10 w-10 items-center justify-center rounded-full"
+                style={{
+                  border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.08)",
+                  backgroundColor: isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.04)",
+                  color: isLight ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.55)",
+                }}>
+                {icon}
+              </span>
+            </Magnetic>
           ))}
         </div>
       </div>
