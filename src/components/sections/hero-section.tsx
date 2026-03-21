@@ -401,7 +401,7 @@ const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) =
                   : "0 4px 20px rgba(136,150,114,0.55), 0 8px 40px rgba(136,150,114,0.28)",
                 fontFamily: "var(--font-sub)",
               }}>
-              View My Work →
+              <span>View My Work</span><span>→</span>
             </span>
           </MagneticGlobal>
           <MagneticGlobal>
