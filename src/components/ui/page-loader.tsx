@@ -18,9 +18,9 @@ const WormholeCanvas = dynamic(() => import("./wormhole-canvas"), { ssr: false }
 
 const SECTION_COMPONENTS: Record<string, React.ReactNode> = {
   home:     <HeroSection />,
-  about:    <AboutSection />,
-  skills:   <SkillsSection />,
   projects: <ProjectsSection />,
+  skills:   <SkillsSection />,
+  about:    <AboutSection />,
   contact:  <ContactSection />,
 };
 
@@ -93,10 +93,10 @@ function SectionPreview({ section }: { section: string }) {
 }
 
 const NAV_ICONS = [
-  { id: "home",    icon: <span className="text-base md:text-xl leading-none">🏠</span>, label: "Home"    },
-  { id: "about",   icon: <span className="text-base md:text-xl leading-none">🙋</span>, label: "About"   },
-  { id: "skills",  icon: <span className="text-base md:text-xl leading-none">⚡</span>, label: "Skills"  },
-  { id: "contact", icon: <span className="text-base md:text-xl leading-none">✉️</span>, label: "Contact" },
+  { id: "home",    icon: <span className="text-base md:text-xl leading-none">🏠</span>, label: "Home"     },
+  { id: "skills",  icon: <span className="text-base md:text-xl leading-none">⚡</span>, label: "Skills"   },
+  { id: "about",   icon: <span className="text-base md:text-xl leading-none">🙋</span>, label: "About"    },
+  { id: "contact", icon: <span className="text-base md:text-xl leading-none">✉️</span>, label: "Contact"  },
 ];
 
 const PROJECT_PREVIEWS = [
@@ -108,14 +108,14 @@ const PROJECT_PREVIEWS = [
 
 
 const SECTION_NAMES: Record<string, string> = {
-  home: "Home", about: "About", skills: "Skills", projects: "Projects", contact: "Contact",
+  home: "Home", projects: "Projects", skills: "Skills", about: "About", contact: "Contact",
 };
 
 const SECTION_INDEX: Record<string, number> = {
-  home: 0, about: 1, skills: 2, projects: 3, contact: 4,
+  home: 0, projects: 1, skills: 2, about: 3, contact: 4,
 };
 
-const SECTION_ORDER = ["home", "about", "skills", "projects", "contact"];
+const SECTION_ORDER = ["home", "projects", "skills", "about", "contact"];
 
 
 const STAGGER   = 18; // px vertical offset per card depth

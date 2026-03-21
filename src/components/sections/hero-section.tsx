@@ -258,8 +258,8 @@ interface StaticHeroRevealProps {
 
 const NAV_ITEMS = [
   { id: "home",    icon: <span className="text-xl leading-none">🏠</span> },
-  { id: "about",   icon: <span className="text-xl leading-none">🙋</span> },
   { id: "skills",  icon: <span className="text-xl leading-none">⚡</span> },
+  { id: "about",   icon: <span className="text-xl leading-none">🙋</span> },
   { id: "contact", icon: <span className="text-xl leading-none">✉️</span> },
 ];
 
