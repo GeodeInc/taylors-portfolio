@@ -262,6 +262,17 @@ const NAV_ITEMS = [
 
 const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) => {
   const [folderOpen, setFolderOpen] = React.useState(false);
+  const [btnHovered, setBtnHovered] = React.useState(false);
+  const btnRef = React.useRef<HTMLSpanElement>(null);
+  React.useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!btnRef.current) return;
+      const r = btnRef.current.getBoundingClientRect();
+      setBtnHovered(e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom);
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
   React.useEffect(() => {
     const handler = (e: Event) => setFolderOpen((e as CustomEvent<{ open: boolean }>).detail.open);
     window.addEventListener("projects-folder-hover", handler);
@@ -391,7 +402,7 @@ const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) =
         {/* CTAs */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <MagneticGlobal>
-            <span className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold"
+            <span ref={btnRef} className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold"
               style={{
                 backgroundColor: btnBg,
                 color: "#ffffff",
@@ -401,7 +412,8 @@ const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) =
                   : "0 4px 20px rgba(136,150,114,0.55), 0 8px 40px rgba(136,150,114,0.28)",
                 fontFamily: "var(--font-sub)",
               }}>
-              <span>View My Work</span><span>→</span>
+              <span>View My Work</span>
+              <span style={{ transition: "transform 0.2s", transform: btnHovered ? "translateX(4px)" : "translateX(0)" }}>→</span>
             </span>
           </MagneticGlobal>
           <MagneticGlobal>
