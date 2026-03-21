@@ -6,7 +6,7 @@ import {
   IconBrandGithub, IconBrandLinkedin, IconMail,
   IconSun, IconMoon,
 } from "@tabler/icons-react";
-import { Magnetic } from "@/components/ui/magnetic";
+import { Magnetic, MagneticGlobal } from "@/components/ui/magnetic";
 import { ImagesBadge } from "@/components/ui/images-badge";
 import { EncryptedText } from "@/components/ui/encrypted-text";
 import { usePreviewMode } from "@/contexts/preview-mode-context";
@@ -390,7 +390,7 @@ const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) =
 
         {/* CTAs */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <Magnetic>
+          <MagneticGlobal>
             <span className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold"
               style={{
                 backgroundColor: btnBg,
@@ -403,8 +403,8 @@ const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) =
               }}>
               View My Work →
             </span>
-          </Magnetic>
-          <Magnetic>
+          </MagneticGlobal>
+          <MagneticGlobal>
             <span className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-sm font-semibold"
               style={{
                 border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.08)",
@@ -414,7 +414,7 @@ const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) =
               }}>
               Get In Touch
             </span>
-          </Magnetic>
+          </MagneticGlobal>
         </div>
 
         {/* Social icons */}
@@ -424,7 +424,7 @@ const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) =
             <IconBrandLinkedin key="li" size={18} />,
             <IconMail key="mail" size={18} />,
           ].map((icon, i) => (
-            <Magnetic key={i} strength={0.5}>
+            <MagneticGlobal key={i} strength={0.5}>
               <span
                 className="flex h-10 w-10 items-center justify-center rounded-full"
                 style={{
@@ -434,7 +434,7 @@ const StaticHeroReveal = ({ isLight, canvasRef, text }: StaticHeroRevealProps) =
                 }}>
                 {icon}
               </span>
-            </Magnetic>
+            </MagneticGlobal>
           ))}
         </div>
       </div>

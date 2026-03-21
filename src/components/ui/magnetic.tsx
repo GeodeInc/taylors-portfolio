@@ -1,5 +1,5 @@
 "use client";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 
 export const Magnetic = ({
@@ -39,6 +39,53 @@ export const Magnetic = ({
       onMouseLeave={onLeave}
       className={className}
     >
+      {children}
+    </motion.div>
+  );
+};
+
+/**
+ * Same as Magnetic but listens to window.mousemove instead of element events.
+ * Use this inside pointer-events-none containers (e.g. the SVG mask reveal layer).
+ */
+export const MagneticGlobal = ({
+  children,
+  strength = 0.4,
+  className,
+}: {
+  children: React.ReactNode;
+  strength?: number;
+  className?: string;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 200, damping: 18, mass: 0.5 });
+  const sy = useSpring(y, { stiffness: 200, damping: 18, mass: 0.5 });
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      const threshold = Math.max(rect.width, rect.height) * 1.5;
+      if (Math.sqrt(dx * dx + dy * dy) < threshold) {
+        x.set(dx * strength);
+        y.set(dy * strength);
+      } else {
+        x.set(0);
+        y.set(0);
+      }
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [strength, x, y]);
+
+  return (
+    <motion.div ref={ref} style={{ x: sx, y: sy }} className={className}>
       {children}
     </motion.div>
   );
