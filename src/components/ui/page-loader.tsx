@@ -217,7 +217,7 @@ function NavTransitionOverlay() {
     containerAnim.set({ rotateX: 0, rotateY: 0 });
     containerAnim.start({
       scale: fullScale,
-      transition: { type: "spring", stiffness: 40, damping: 22, mass: 1.2, clamp: true },
+      transition: { type: "spring", stiffness: 40, damping: 22, mass: 1.2 },
     }).then(() => {
       setPhase("idle");
       window.dispatchEvent(new Event("nav-transition-done"));
