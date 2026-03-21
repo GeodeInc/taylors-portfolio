@@ -552,8 +552,11 @@ function useWordCycler(words: string[], intervalMs = 4500) {
   }, [ready]);
   React.useEffect(() => {
     if (!ready) return;
-    const timer = setInterval(() => setEncryptOut(true), intervalMs);
-    return () => clearInterval(timer);
+    let timeout: ReturnType<typeof setTimeout>;
+    const timer = setInterval(() => {
+      timeout = setTimeout(() => setEncryptOut(true), 1200);
+    }, intervalMs);
+    return () => { clearInterval(timer); clearTimeout(timeout); };
   }, [ready, intervalMs]);
   const onEncryptComplete = React.useCallback(() => {
     setEncryptOut(false);
