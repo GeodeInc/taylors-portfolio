@@ -50,7 +50,7 @@ function SectionPreview({ section }: { section: string }) {
   return (
     <MotionConfig reducedMotion="always">
       <PreviewModeContext.Provider value={true}>
-        <div ref={outerRef} style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+        <div ref={outerRef} style={{ position: "absolute", inset: 0, overflow: "visible" }}>
           <div
             data-preview="true"
             style={{
