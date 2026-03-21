@@ -257,10 +257,11 @@ interface StaticHeroRevealProps {
 }
 
 const NAV_ITEMS = [
-  { id: "home",    icon: <span className="text-xl leading-none">🏠</span> },
-  { id: "skills",  icon: <span className="text-xl leading-none">⚡</span> },
-  { id: "about",   icon: <span className="text-xl leading-none">🙋</span> },
-  { id: "contact", icon: <span className="text-xl leading-none">✉️</span> },
+  { id: "home",     icon: <span className="text-xl leading-none">🏠</span> },
+  { id: "projects", icon: null }, // rendered as ImagesBadge inline
+  { id: "skills",   icon: <span className="text-xl leading-none">⚡</span> },
+  { id: "about",    icon: <span className="text-xl leading-none">🙋</span> },
+  { id: "contact",  icon: <span className="text-xl leading-none">✉️</span> },
 ];
 
 const StaticHeroReveal = ({ isLight, canvasRef, text, encryptOut }: StaticHeroRevealProps) => {
@@ -322,18 +323,15 @@ const StaticHeroReveal = ({ isLight, canvasRef, text, encryptOut }: StaticHeroRe
         <div className="relative flex items-end">
           {NAV_ITEMS.map((item) => (
             <span key={item.id} className="relative flex flex-col items-center px-4 py-2">
-              {item.icon}
-              {/* Active underline bar */}
+              {item.id === "projects"
+                ? <ImagesBadge folderSize={{ width: 28, height: 22 }} forceOpen={folderOpen} />
+                : item.icon}
               {item.id === "home" && (
                 <span className="absolute bottom-0 left-1 right-1 rounded-full"
                   style={{ height: "2px", backgroundColor: navBar }} />
               )}
             </span>
           ))}
-          {/* Projects folder — same component, synced hover */}
-          <span className="flex flex-col items-center px-4 py-2">
-            <ImagesBadge folderSize={{ width: 28, height: 22 }} forceOpen={folderOpen} />
-          </span>
           {/* Divider */}
           <span className="self-stretch mx-2 mb-2" style={{ width: 1, backgroundColor: navBorder }} />
           {/* Theme toggle */}

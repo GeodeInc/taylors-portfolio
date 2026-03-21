@@ -498,8 +498,8 @@ function ScatteredNav() {
       style={{ willChange: "transform", zIndex: folderHovered ? 6001 : 5000 }}
     >
       <div className="relative flex items-end pointer-events-auto">
-        {/* ── Nav icons ── */}
-        {NAV_ICONS.map((item, i) => (
+        {/* ── Home ── */}
+        {NAV_ICONS.slice(0, 1).map((item, i) => (
           <motion.button
             key={`${item.id}-${reanimKey}`}
             title={item.label}
@@ -534,7 +534,7 @@ function ScatteredNav() {
           style={{ color: activeSection === "projects" ? btnColor : muted, zIndex: 5001, cursor: activeSection === "projects" ? "default" : "pointer" }}
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: 4 * 0.07 }}
+          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: 1 * 0.07 }}
           whileHover={activeSection === "projects" ? {} : { y: -3, transition: hoverTrans }}
           onClick={() => navigateTo("projects")}
           onWheel={forwardScroll}
@@ -562,6 +562,33 @@ function ScatteredNav() {
             />
           )}
         </motion.button>
+
+        {/* ── Skills, About, Contact ── */}
+        {NAV_ICONS.slice(1).map((item, i) => (
+          <motion.button
+            key={`${item.id}-${reanimKey}`}
+            title={item.label}
+            disabled={activeSection === item.id}
+            className="relative flex flex-col items-center px-2 md:px-4 py-2"
+            style={{ color: activeSection === item.id ? btnColor : muted, cursor: activeSection === item.id ? "default" : "pointer" }}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: (i + 2) * 0.07 }}
+            whileHover={activeSection === item.id ? {} : { y: -3, transition: hoverTrans }}
+            onClick={() => navigateTo(item.id)}
+            onWheel={forwardScroll}
+          >
+            {item.icon}
+            {activeSection === item.id && (
+              <motion.div
+                layoutId="nav-underline"
+                className="absolute -bottom-px left-0 right-0 h-[2px] rounded-full"
+                style={{ backgroundColor: btnColor }}
+                transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+              />
+            )}
+          </motion.button>
+        ))}
 
         {/* ── Divider ── */}
         <div className="self-stretch mx-2 mb-2" style={{ width: 1, backgroundColor: btnBorder, opacity: 0.5 }} />
