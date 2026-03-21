@@ -44,7 +44,7 @@ export const POSHeader = () => {
   }, []);
 
   return (
-  <div ref={containerRef} className="relative flex h-32 w-full overflow-hidden rounded-xl bg-[#080d14]">
+  <div ref={containerRef} className="relative flex h-full w-full overflow-hidden rounded-xl bg-[#080d14]">
     {/* Grid background */}
     <svg className="absolute inset-0 h-full w-full opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -133,7 +133,7 @@ export const SWATCHES = [
 ];
 
 export const ColorPaletteHeader = () => (
-  <div className="relative flex h-32 w-full overflow-hidden rounded-xl bg-[#0a0a0a]">
+  <div className="relative flex h-full w-full overflow-hidden rounded-xl bg-[#0a0a0a]">
     {/* Animated swatch columns */}
     {Array.from({ length: 5 }).map((_, col) => (
       <div key={col} className="flex flex-1 flex-col">
@@ -167,7 +167,7 @@ export const ReflectionHeader = () => {
   const bPath = { x: [180, 165, 180], y: [88, 70, 88] };
 
   return (
-    <div className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-[#080d14]">
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-[#080d14]">
       {/* subtle grid */}
       <svg className="absolute inset-0 h-full w-full opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -235,7 +235,7 @@ const projects = [
     className: "col-span-1",
     badge: "Business",
     header: (
-      <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl relative"
+      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl relative"
         style={{ background: "linear-gradient(160deg, #1c2a3a 0%, #0d1520 100%)" }}>
         {/* Dot grid texture */}
         <svg className="absolute inset-0 h-full w-full opacity-[0.12]" xmlns="http://www.w3.org/2000/svg">
@@ -433,17 +433,17 @@ export const ProjectsSection = () => {
                 layoutId={`card-${p.title}-${id}`}
                 key={p.title}
                 onClick={() => setActive(p)}
-                className="rounded-2xl border cursor-pointer overflow-hidden hover:border-white/[0.15] transition-colors"
+                className="rounded-2xl border cursor-pointer overflow-hidden flex flex-col hover:border-white/[0.15] transition-colors"
                 style={{ borderColor: cardBorder, backgroundColor: cardBg }}
                 whileHover={{ scale: 1.015 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
-                <motion.div layoutId={`header-${p.title}-${id}`}>
-                  <div className="w-full h-28 md:h-40">
+                <motion.div layoutId={`header-${p.title}-${id}`} className="flex-1 min-h-40">
+                  <div className="w-full h-full">
                     {p.header}
                   </div>
                 </motion.div>
-                <div className="p-4">
+                <div className="p-4 flex-shrink-0">
                   <motion.h3
                     layoutId={`title-${p.title}-${id}`}
                     className="font-semibold text-base" style={{ color: headingColor }}

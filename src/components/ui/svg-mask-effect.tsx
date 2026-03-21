@@ -11,6 +11,8 @@ interface SvgMaskEffectProps {
   delay?: number;
   /** When false the circle is hidden regardless of cursor position. */
   enabled?: boolean;
+  /** If provided, the circle only appears when the cursor is over this element instead of the whole container. */
+  triggerRef?: React.RefObject<HTMLElement | null>;
 }
 
 export const SvgMaskEffect = ({
@@ -20,11 +22,13 @@ export const SvgMaskEffect = ({
   className = "",
   delay = 900,
   enabled = true,
+  triggerRef,
 }: SvgMaskEffectProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const revealRef    = useRef<HTMLDivElement>(null);
   const smooth       = useRef({ x: -9999, y: -9999 });
   const target       = useRef({ x: -9999, y: -9999 });
+  const smoothSize   = useRef(0);
   const rafRef       = useRef<number>(0);
   const inside       = useRef(false);
   const ready        = useRef(false);
@@ -44,11 +48,13 @@ export const SvgMaskEffect = ({
 
     smooth.current = { x: -9999, y: -9999 };
     target.current = { x: -9999, y: -9999 };
+    smoothSize.current = 0;
 
     const timer = setTimeout(() => { ready.current = true; }, delay);
 
     const onMove = (e: MouseEvent) => {
-      const rect = containerRef.current?.getBoundingClientRect();
+      const el = triggerRef ? triggerRef.current : containerRef.current;
+      const rect = el?.getBoundingClientRect();
       if (!rect) return;
       inside.current =
         e.clientX >= rect.left && e.clientX <= rect.right &&
@@ -60,7 +66,11 @@ export const SvgMaskEffect = ({
     const loop = () => {
       smooth.current.x += (target.current.x - smooth.current.x) * 0.12;
       smooth.current.y += (target.current.y - smooth.current.y) * 0.12;
-      const sz = (inside.current && ready.current && enabledRef.current) ? revealSize : 0;
+      const targetSize = (inside.current && ready.current && enabledRef.current) ? revealSize : 0;
+      // Ease in fast (0.18), ease out slower (0.08) for a lingering shrink effect
+      const lerpFactor = smoothSize.current < targetSize ? 0.18 : 0.08;
+      smoothSize.current += (targetSize - smoothSize.current) * lerpFactor;
+      const sz = Math.round(smoothSize.current * 10) / 10;
       reveal.style.clipPath = `circle(${sz}px at ${smooth.current.x}px ${smooth.current.y}px)`;
       rafRef.current = requestAnimationFrame(loop);
     };

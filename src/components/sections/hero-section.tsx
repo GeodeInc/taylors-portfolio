@@ -116,9 +116,10 @@ interface HeroLayerProps {
   text: string;
   encryptOut?: boolean;
   onEncryptComplete?: () => void;
+  headingRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-const HeroLayer = ({ isLight, canvasRef, canvasOpacity = 1, text, encryptOut, onEncryptComplete }: HeroLayerProps) => {
+const HeroLayer = ({ isLight, canvasRef, canvasOpacity = 1, text, encryptOut, onEncryptComplete, headingRef }: HeroLayerProps) => {
   const { fg, fgMuted, iconBase, iconBorder } = heroColors(isLight);
   const mo = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5 } };
 
@@ -178,19 +179,20 @@ const HeroLayer = ({ isLight, canvasRef, canvasOpacity = 1, text, encryptOut, on
           </span>
         </motion.div>
 
-        {/* Name */}
-        <motion.h1 {...mo} transition={{ ...mo.transition, delay: 0.1 }}
-          className="font-bold w-full"
-          style={{ fontFamily: "var(--font-name)", color: fg, fontSize: "clamp(1.6rem, 8.5vw, 3.75rem)", wordBreak: "keep-all" }}>
-          Taylor<br className="sm:hidden" /> Houghtaling
-        </motion.h1>
+        {/* Name + encrypted text — ref used as SVG mask trigger zone */}
+        <div ref={headingRef}>
+          <motion.h1 {...mo} transition={{ ...mo.transition, delay: 0.1 }}
+            className="font-bold w-full"
+            style={{ fontFamily: "var(--font-name)", color: fg, fontSize: "clamp(1.6rem, 8.5vw, 3.75rem)", wordBreak: "keep-all" }}>
+            Taylor<br className="sm:hidden" /> Houghtaling
+          </motion.h1>
 
-        {/* Encrypted cycling text */}
-        <motion.div {...mo} transition={{ ...mo.transition, delay: 0.2 }} className="mt-2 md:mt-4">
-          <div style={{ fontSize: "clamp(0.85rem, 3.8vw, 1.875rem)", fontFamily: "var(--font-sub)", color: isLight ? "#889672" : "#2a5298" }}>
-            <EncryptedText text={text} revealDelayMs={80} flipDelayMs={60} encryptedClassName="opacity-35" encryptOut={encryptOut} onEncryptComplete={onEncryptComplete} />
-          </div>
-        </motion.div>
+          <motion.div {...mo} transition={{ ...mo.transition, delay: 0.2 }} className="mt-2 md:mt-4">
+            <div style={{ fontSize: "clamp(0.85rem, 3.8vw, 1.875rem)", fontFamily: "var(--font-sub)", color: isLight ? "#889672" : "#2a5298" }}>
+              <EncryptedText text={text} revealDelayMs={80} flipDelayMs={60} encryptedClassName="opacity-35" encryptOut={encryptOut} onEncryptComplete={onEncryptComplete} />
+            </div>
+          </motion.div>
+        </div>
 
         {/* CTAs */}
         <motion.div {...mo} transition={{ ...mo.transition, delay: 0.4 }}
@@ -461,6 +463,7 @@ export const HeroSection = () => {
   const revealCanvasRef = useRef<HTMLCanvasElement | null>(null);  // reveal layer (dark peek when in light mode)
   const mouseRef        = useRef<Point>({ x: 0, y: 0 });
   const targetMouseRef  = useRef<Point>({ x: 0, y: 0 });
+  const headingRef      = useRef<HTMLDivElement | null>(null);     // h1 + encrypted text — SVG mask trigger zone
   const isPreview       = usePreviewMode();
   const { theme }       = useTheme();
   const isLight         = theme === "light";
@@ -525,9 +528,10 @@ export const HeroSection = () => {
       <SvgMaskEffect
         revealSize={80}
         enabled={onHero && !isMobile}
+        triggerRef={headingRef}
         revealChildren={<StaticHeroReveal isLight={!isLight} canvasRef={revealCanvasRef} text={twText} encryptOut={encryptOut} />}
       >
-        <HeroLayer isLight={isLight} canvasRef={canvasRef} canvasOpacity={canvasOpacity} text={twText} encryptOut={encryptOut} onEncryptComplete={onEncryptComplete} />
+        <HeroLayer isLight={isLight} canvasRef={canvasRef} canvasOpacity={canvasOpacity} text={twText} encryptOut={encryptOut} onEncryptComplete={onEncryptComplete} headingRef={headingRef} />
       </SvgMaskEffect>
     </section>
   );

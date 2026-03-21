@@ -289,12 +289,13 @@ function NavTransitionOverlay() {
             return (
               <motion.div
                 key={section}
-                className="absolute inset-0 overflow-hidden pointer-events-none"
+                className="absolute inset-0 pointer-events-none"
                 style={{
                   backgroundColor: overlayBg,
                   borderRadius: expanding && isTarget ? 0 : "1rem",
                   boxShadow: shrinking ? "none" : `0 10px 32px rgba(74,96,128,${Math.max(0, 0.35 - prePos * 0.06)}), 0 50px 100px rgba(0,0,0,0.65)`,
                   zIndex: shrinking ? (isSource ? 5 : 1) : (swapped ? postZ : preZ),
+                  overflow: "visible",
                 }}
                 initial={{ x: preX, y: preY, scaleX: preScaleX }}
                 animate={
@@ -325,6 +326,16 @@ function NavTransitionOverlay() {
                         : { duration: show ? slideDur : 0, delay: show ? slideDelay + (prePos - 1) * 0.05 : 0, ease: [0.22, 1, 0.36, 1] }
                 }
               >
+                {/* Section preview — clipped to card bounds */}
+                <div style={{ position: "absolute", inset: 0, overflow: "hidden", borderRadius: expanding && isTarget ? 0 : "1rem" }}>
+                  {show && (
+                    (shrinking  && prePos === 0) ||
+                    (phase === "animating" && prePos <= 1) ||
+                    (expanding  && isTarget)
+                  ) && <SectionPreview section={section} />}
+                </div>
+
+                {/* Border overlay */}
                 {(!shrinking || isSource) && (
                   <motion.div
                     className="absolute inset-0 pointer-events-none"
@@ -333,44 +344,24 @@ function NavTransitionOverlay() {
                     transition={{ duration: 0.25, delay: 0 }}
                   />
                 )}
-                {show && (
-                  (shrinking  && prePos === 0) ||
-                  (phase === "animating" && prePos <= 1) ||
-                  (expanding  && isTarget)
-                ) && <SectionPreview section={section} />}
+
+                {/* Label — lives inside the card so it follows card movement */}
+                {!expanding && (
+                  <div style={{ position: "absolute", top: -22, left: 0, zIndex: 20 }}>
+                    <p className="text-xs font-medium" style={{
+                      fontFamily: "var(--font-sans)",
+                      color: theme === "light" ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.6)",
+                    }}>
+                      {SECTION_NAMES[section]}
+                    </p>
+                  </div>
+                )}
               </motion.div>
             );
           })}
         </motion.div>
       </div>
 
-      {/* Labels — one per card, always visible during animating phase */}
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.25 }}
-      >
-        <div className="relative" style={{ width: 480, height: 300, overflow: "visible" }}>
-          {SECTION_ORDER.map((section) => {
-            const pos = (swapped ? postOrder : preOrder).indexOf(section);
-            const x   =  pos * X_STAGGER;
-            const y   = -pos * STAGGER - 22;
-            return (
-              <motion.div
-                key={section}
-                className="absolute"
-                style={{ top: 0, left: 0, zIndex: 10 - pos }}
-                animate={{ x, y, opacity: 1 }}
-                transition={{ duration: show ? slideDur : 0, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <p className="text-white/60 text-xs font-medium" style={{ fontFamily: "var(--font-sans)" }}>
-                  {SECTION_NAMES[section]}
-                </p>
-              </motion.div>
-            );
-          })}
-        </div>
-      </motion.div>
     </div>
   );
 }
