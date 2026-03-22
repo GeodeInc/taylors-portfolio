@@ -350,16 +350,6 @@ export const ProjectsSection = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.1 } }}
-            className="flex absolute top-4 right-4 items-center justify-center bg-neutral-800 hover:bg-neutral-700 rounded-full h-8 w-8 z-10"
-            aria-label="Close project details"
-            onClick={close}
-          >
-            <IconX size={14} className="text-white" />
-          </motion.button>
           <motion.div
             ref={cardRef}
             layoutId={`card-${openedFromIdx}-${id}`}
@@ -372,6 +362,18 @@ export const ProjectsSection = () => {
               if (Math.abs(delta) > 50) delta > 0 ? goNext() : goPrev();
             }}
           >
+              {/* Close button — inside cardRef so touchstart doesn't trigger useOutsideClick */}
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                className="flex absolute top-4 right-4 items-center justify-center bg-neutral-800 hover:bg-neutral-700 rounded-full h-8 w-8 z-10"
+                aria-label="Close project details"
+                onClick={close}
+              >
+                <IconX size={14} className="text-white" />
+              </motion.button>
+
               {/* Header with prev/next arrows */}
               <div className="relative w-full h-64">
                 <motion.div
