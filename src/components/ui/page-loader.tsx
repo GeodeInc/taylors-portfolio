@@ -2,9 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { AnimatePresence, MotionConfig, motion, useAnimation } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { IconSun, IconMoon } from "@tabler/icons-react";
+import { HomeNavIcon, SkillsNavIcon, PersonNavIcon, MailNavIcon } from "@/components/ui/nav-icons";
 import { ImagesBadge } from "@/components/ui/images-badge";
 import { useTheme } from "@/contexts/theme-context";
 import { PreviewModeContext } from "@/contexts/preview-mode-context";
@@ -15,6 +16,9 @@ import { ProjectsSection } from "@/components/sections/projects-section";
 import { ContactSection } from "@/components/sections/contact-section";
 
 const WormholeCanvas = dynamic(() => import("./wormhole-canvas"), { ssr: false });
+
+// Module-level flag — resets on every hard refresh (page load), persists across client-side navigation
+let spillPlayedThisLoad = false;
 
 const SECTION_COMPONENTS: Record<string, React.ReactNode> = {
   home:     <HeroSection />,
@@ -91,13 +95,6 @@ function SectionPreview({ section }: { section: string }) {
     </MotionConfig>
   );
 }
-
-const NAV_ICONS = [
-  { id: "home",    icon: <span className="text-base md:text-xl leading-none">🏠</span>, label: "Home"     },
-  { id: "skills",  icon: <span className="text-base md:text-xl leading-none">⚡</span>, label: "Skills"   },
-  { id: "about",   icon: <span className="text-base md:text-xl leading-none">🙋</span>, label: "About"    },
-  { id: "contact", icon: <span className="text-base md:text-xl leading-none">✉️</span>, label: "Contact"  },
-];
 
 const PROJECT_PREVIEWS = [
   "/preview/tenzor",
@@ -179,6 +176,12 @@ function NavTransitionOverlay() {
 
   useEffect(() => {
     const handler = (e: Event) => {
+      // Skip 3D animation for users who prefer reduced motion
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        window.dispatchEvent(new Event("nav-transition-done"));
+        return;
+      }
+
       const { target: t, source: s } = (e as CustomEvent<{ target: string; source: string }>).detail;
       const srcIdx   = SECTION_ORDER.indexOf(s);
       const tgtIdx   = SECTION_ORDER.indexOf(t);
@@ -366,6 +369,100 @@ function NavTransitionOverlay() {
   );
 }
 
+// ─── Spill Overlay ────────────────────────────────────────────────────────────
+type SpillRect = { x: number; y: number; width: number; height: number };
+
+function SpillOverlay() {
+  const [phase, setPhase] = useState<"idle" | "flying" | "landing" | "gone">("idle");
+  const [origin, setOrigin] = useState({ x: 0, y: 0 });
+  const [rects,  setRects]  = useState<SpillRect[]>([]);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { origin: o, rects: r } = (e as CustomEvent<{ origin: { x: number; y: number }; rects: SpillRect[] }>).detail;
+      setOrigin(o);
+      setRects(r);
+      setPhase("flying");
+      // land → settle 1.5s → cards + iframes crossfade together → idle
+      const t1 = setTimeout(() => setPhase("landing"), 800);
+      const t2 = setTimeout(() => {
+        window.dispatchEvent(new Event("projects-spill-done")); // cards start fading in
+        setPhase("gone"); // iframes start fading out — simultaneous crossfade
+      }, 800 + 1500);
+      const t3 = setTimeout(() => setPhase("idle"), 800 + 1500 + 1200);
+      timers.current = [t1, t2, t3];
+    };
+    window.addEventListener("projects-spill", handler);
+    return () => {
+      window.removeEventListener("projects-spill", handler);
+      timers.current.forEach(clearTimeout);
+    };
+  }, []);
+
+  if (phase === "idle" || rects.length === 0) return null;
+
+  return (
+    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 7500 }}>
+      {PROJECT_PREVIEWS.map((src, i) => {
+        const rect = rects[i];
+        if (!rect) return null;
+        const initRotate = (i - 1.5) * 14;
+        const flyRotate  = (i - 1.5) * 4;
+        return (
+          <motion.div
+            key={i}
+            className="absolute overflow-hidden rounded-xl shadow-2xl"
+            // Pin the div at the exact card-header position via left/top;
+            // use x/y only as the offset from that anchor (starts at folder, lands at 0,0)
+            style={{
+              width:  rect.width,
+              height: rect.height,
+              left:   rect.x,
+              top:    rect.y,
+            }}
+            initial={{
+              x: origin.x - rect.x - rect.width  / 2,
+              y: origin.y - rect.y - rect.height / 2,
+              scale: 0,
+              opacity: 0,
+              rotate: initRotate,
+            }}
+            animate={
+              phase === "flying"
+                ? { x: 0, y: 0, scale: 1, opacity: 1, rotate: flyRotate }
+                : phase === "landing"
+                ? { x: 0, y: 0, scale: 1,    opacity: 0.85, rotate: 0 }
+                : { x: 0, y: 0, scale: 1, opacity: 0, rotate: 0 }
+            }
+            transition={
+              phase === "flying"
+                ? {
+                    delay: i * 0.12,
+                    // Y falls fast with gravity; X spreads slowly so motion reads as "down"
+                    x: { duration: 1.0, ease: [0.2, 0, 0.4, 1],  delay: i * 0.12 },
+                    y: { duration: 0.65, ease: [0.6, 0, 1, 0.6], delay: i * 0.12 },
+                    scale:   { type: "spring", stiffness: 200, damping: 18, delay: i * 0.12 },
+                    opacity: { duration: 0.15, delay: i * 0.12 },
+                    rotate:  { duration: 1.0, ease: "easeOut",    delay: i * 0.12 },
+                  }
+                : phase === "gone"
+                  ? { opacity: { duration: 1.1, ease: "linear" }, duration: 0 }
+                  : { duration: 0.35, ease: "easeOut" }
+            }
+          >
+            <iframe
+              src={src}
+              style={{ width: rect.width, height: rect.height, pointerEvents: "none", border: "none", display: "block" }}
+              scrolling="no"
+            />
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 function ScatteredNav() {
   const { theme, toggle } = useTheme();
@@ -379,9 +476,16 @@ function ScatteredNav() {
   const [activeSection, setActiveSection] = useState("home");
   const [reanimKey, setReanimKey] = useState(0);
   const [folderHovered, setFolderHovered] = useState(false);
+  const [homeHovered, setHomeHovered] = useState(false);
+  const [skillsHovered, setSkillsHovered] = useState(false);
+  const [contactHovered, setContactHovered] = useState(false);
+  const [aboutHovered, setAboutHovered] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
   const previewsOpen = useRef(false);
   const closePreviewsRef = useRef<(() => void) | null>(null);
+  const projectsBtnRef = useRef<HTMLButtonElement>(null);
+  const doSpillRef = useRef(false);
+  const useOverlayForProjectsRef = useRef(false);
   const scrollingRef = useRef(false);
   const wheelAccum = useRef(0);
 
@@ -468,10 +572,63 @@ function ScatteredNav() {
 
   const navigateTo = (id: string) => {
     closePreviewsRef.current?.();
-    window.dispatchEvent(new CustomEvent("nav-transition", { detail: { target: id, source: activeSection } }));
+    const scrollEl = document.querySelector("main") as HTMLElement | null;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (id === "projects" && activeSection !== "projects") {
+      if (!spillPlayedThisLoad && !reduced) {
+        // First time navigating to projects — do spill
+        spillPlayedThisLoad = true;
+        doSpillRef.current = true;
+        window.dispatchEvent(new Event("projects-spill-hide"));
+      } else {
+        // Spill already played — use nav overlay like every other section
+        useOverlayForProjectsRef.current = true;
+        window.dispatchEvent(new CustomEvent("nav-transition", { detail: { target: id, source: activeSection } }));
+      }
+    } else if (id !== "projects") {
+      window.dispatchEvent(new CustomEvent("nav-transition", { detail: { target: id, source: activeSection } }));
+    }
+
     setTimeout(() => {
-      const scrollEl = document.querySelector("main") as HTMLElement | null;
-      if (scrollEl) scrollEl.scrollTo({ top: SECTION_INDEX[id] * scrollEl.clientHeight });
+      if (!scrollEl) return;
+      const targetTop = SECTION_INDEX[id] * scrollEl.clientHeight;
+      if (id === "projects" && doSpillRef.current) {
+        doSpillRef.current = false;
+        // Slow eased scroll; dispatch spill with real positions once scroll finishes
+        // (nav will have slid to its top position by then, so origin is correct)
+        const start = scrollEl.scrollTop;
+        const delta = targetTop - start;
+        const duration = 1300;
+        const startTime = performance.now();
+        const ease = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        const step = (now: number) => {
+          const p = Math.min((now - startTime) / duration, 1);
+          scrollEl.scrollTop = start + delta * ease(p);
+          if (p < 1) {
+            requestAnimationFrame(step);
+          } else {
+            // Scroll done — nav is now at the top; read button position and card rects
+            const btnRect = projectsBtnRef.current?.getBoundingClientRect();
+            const origin = btnRect
+              ? { x: btnRect.left + btnRect.width / 2, y: btnRect.top + btnRect.height / 2 }
+              : { x: window.innerWidth / 2, y: 20 };
+            const headers = Array.from(document.querySelectorAll("[data-project-header]")).slice(0, 4);
+            const rects = headers.map(el => {
+              const r = el.getBoundingClientRect();
+              return { x: r.x, y: r.y, width: r.width, height: r.height };
+            });
+            window.dispatchEvent(new CustomEvent("projects-spill", { detail: { origin, rects } }));
+          }
+        };
+        requestAnimationFrame(step);
+      } else {
+        // If overlay was triggered for projects, or non-projects section: instant scroll (overlay handles visual)
+        // If plain projects smooth scroll (shouldn't normally reach here post-spill): smooth
+        const usingOverlay = id === "projects" && useOverlayForProjectsRef.current;
+        if (usingOverlay) useOverlayForProjectsRef.current = false;
+        scrollEl.scrollTo({ top: targetTop, behavior: usingOverlay ? undefined : (id === "projects" ? "smooth" : undefined) });
+      }
     }, 100);
   };
 
@@ -483,42 +640,77 @@ function ScatteredNav() {
   const hoverTrans = { type: "spring", stiffness: 300, damping: 22 } as const;
 
   return (
-    <div
-      ref={navRef}
-      className="fixed top-4 right-2 md:right-0 md:inset-x-0 md:justify-center flex pointer-events-none"
-      style={{ willChange: "transform", zIndex: folderHovered ? 6001 : 5000 }}
-    >
+    <>
+      {/* ── Section progress dots (desktop only) ── */}
+      {mounted && isDesktop && (
+        <div
+          className="fixed flex flex-col items-center pointer-events-auto"
+          style={{ right: 16, top: "50%", transform: "translateY(-50%)", zIndex: 4999, gap: 8 }}
+        >
+          {(["home", "projects", "skills", "about", "contact"] as const).map((s) => (
+            <motion.button
+              key={s}
+              title={s.charAt(0).toUpperCase() + s.slice(1)}
+              aria-label={`Go to ${s.charAt(0).toUpperCase() + s.slice(1)} section`}
+              aria-current={activeSection === s ? "true" : undefined}
+              onClick={() => navigateTo(s)}
+              animate={{
+                height: activeSection === s ? 22 : 6,
+                opacity: activeSection === s ? 1 : 0.30,
+              }}
+              transition={{ type: "spring", stiffness: 420, damping: 32 }}
+              style={{
+                width: 4,
+                borderRadius: 9999,
+                background: btnColor,
+                border: "none",
+                padding: 0,
+                cursor: activeSection === s ? "default" : "pointer",
+                flexShrink: 0,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ── Desktop nav bar ── */}
+      <div
+        ref={navRef}
+        className="fixed top-4 right-2 md:right-0 md:inset-x-0 md:justify-center hidden md:flex pointer-events-none"
+        style={{ willChange: "transform", zIndex: folderHovered ? 6001 : 5000 }}
+      >
       <div className="relative flex items-end pointer-events-auto">
         {/* ── Home ── */}
-        {NAV_ICONS.slice(0, 1).map((item, i) => (
-          <motion.button
-            key={`${item.id}-${reanimKey}`}
-            title={item.label}
-            disabled={activeSection === item.id}
-            className="relative flex flex-col items-center px-2 md:px-4 py-2"
-            style={{ color: activeSection === item.id ? btnColor : muted, cursor: activeSection === item.id ? "default" : "pointer" }}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: i * 0.07 }}
-            whileHover={activeSection === item.id ? {} : { y: -3, transition: hoverTrans }}
-            onClick={() => navigateTo(item.id)}
-            onWheel={forwardScroll}
-          >
-            {item.icon}
-            {activeSection === item.id && (
-              <motion.div
-                layoutId="nav-underline"
-                className="absolute -bottom-px left-0 right-0 h-[2px] rounded-full"
-                style={{ backgroundColor: btnColor }}
-                transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
-              />
-            )}
-          </motion.button>
-        ))}
+        <motion.button
+          key={`home-${reanimKey}`}
+          title="Home"
+          disabled={activeSection === "home"}
+          className="relative flex flex-col items-center px-2 md:px-4 py-2"
+          style={{ cursor: activeSection === "home" ? "default" : "pointer" }}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: 0 }}
+          whileHover={activeSection === "home" ? {} : { y: -3, transition: hoverTrans }}
+          onMouseEnter={() => setHomeHovered(true)}
+          onMouseLeave={() => setHomeHovered(false)}
+          onClick={() => navigateTo("home")}
+          onWheel={forwardScroll}
+        >
+          <HomeNavIcon size={26} isOpen={activeSection === "home" || homeHovered} />
+          {activeSection === "home" && (
+            <motion.div
+              layoutId="nav-underline"
+              className="absolute -bottom-px left-0 right-0 h-[2px] rounded-full"
+              style={{ backgroundColor: btnColor }}
+              transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+            />
+          )}
+        </motion.button>
 
         {/* ── Projects ── */}
         <motion.button
           key={`projects-${reanimKey}`}
+          ref={projectsBtnRef}
           title="Projects"
           disabled={activeSection === "projects"}
           className="relative flex flex-col items-center px-2 md:px-4 py-2"
@@ -554,32 +746,87 @@ function ScatteredNav() {
           )}
         </motion.button>
 
-        {/* ── Skills, About, Contact ── */}
-        {NAV_ICONS.slice(1).map((item, i) => (
-          <motion.button
-            key={`${item.id}-${reanimKey}`}
-            title={item.label}
-            disabled={activeSection === item.id}
-            className="relative flex flex-col items-center px-2 md:px-4 py-2"
-            style={{ color: activeSection === item.id ? btnColor : muted, cursor: activeSection === item.id ? "default" : "pointer" }}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: (i + 2) * 0.07 }}
-            whileHover={activeSection === item.id ? {} : { y: -3, transition: hoverTrans }}
-            onClick={() => navigateTo(item.id)}
-            onWheel={forwardScroll}
-          >
-            {item.icon}
-            {activeSection === item.id && (
-              <motion.div
-                layoutId="nav-underline"
-                className="absolute -bottom-px left-0 right-0 h-[2px] rounded-full"
-                style={{ backgroundColor: btnColor }}
-                transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
-              />
-            )}
-          </motion.button>
-        ))}
+        {/* ── Skills ── */}
+        <motion.button
+          key={`skills-${reanimKey}`}
+          title="Skills"
+          disabled={activeSection === "skills"}
+          className="relative flex flex-col items-center px-2 md:px-4 py-2"
+          style={{ color: activeSection === "skills" ? btnColor : muted, cursor: activeSection === "skills" ? "default" : "pointer" }}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: 2 * 0.07 }}
+          whileHover={activeSection === "skills" ? {} : { y: -3, transition: hoverTrans }}
+          onMouseEnter={() => setSkillsHovered(true)}
+          onMouseLeave={() => setSkillsHovered(false)}
+          onClick={() => navigateTo("skills")}
+          onWheel={forwardScroll}
+        >
+          <SkillsNavIcon size={26} isOpen={activeSection === "skills" || skillsHovered} />
+          {activeSection === "skills" && (
+            <motion.div
+              layoutId="nav-underline"
+              className="absolute -bottom-px left-0 right-0 h-[2px] rounded-full"
+              style={{ backgroundColor: btnColor }}
+              transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+            />
+          )}
+        </motion.button>
+
+        {/* ── About ── */}
+        {/* ── About ── */}
+        <motion.button
+          key={`about-${reanimKey}`}
+          title="About"
+          disabled={activeSection === "about"}
+          className="relative flex flex-col items-center px-2 md:px-4 py-2"
+          style={{ color: activeSection === "about" ? btnColor : muted, cursor: activeSection === "about" ? "default" : "pointer" }}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: 3 * 0.07 }}
+          whileHover={activeSection === "about" ? {} : { y: -3, transition: hoverTrans }}
+          onMouseEnter={() => setAboutHovered(true)}
+          onMouseLeave={() => setAboutHovered(false)}
+          onClick={() => navigateTo("about")}
+          onWheel={forwardScroll}
+        >
+          <PersonNavIcon size={26} isActive={activeSection === "about" || aboutHovered} />
+          {activeSection === "about" && (
+            <motion.div
+              layoutId="nav-underline"
+              className="absolute -bottom-px left-0 right-0 h-[2px] rounded-full"
+              style={{ backgroundColor: btnColor }}
+              transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+            />
+          )}
+        </motion.button>
+
+        {/* ── Contact ── */}
+        <motion.button
+          key={`contact-${reanimKey}`}
+          title="Contact"
+          disabled={activeSection === "contact"}
+          className="relative flex flex-col items-center px-2 md:px-4 py-2"
+          style={{ color: activeSection === "contact" ? btnColor : muted, cursor: activeSection === "contact" ? "default" : "pointer" }}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "tween", ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: 4 * 0.07 }}
+          whileHover={activeSection === "contact" ? {} : { y: -3, transition: hoverTrans }}
+          onMouseEnter={() => setContactHovered(true)}
+          onMouseLeave={() => setContactHovered(false)}
+          onClick={() => navigateTo("contact")}
+          onWheel={forwardScroll}
+        >
+          <MailNavIcon size={26} isOpen={activeSection === "contact" || contactHovered} />
+          {activeSection === "contact" && (
+            <motion.div
+              layoutId="nav-underline"
+              className="absolute -bottom-px left-0 right-0 h-[2px] rounded-full"
+              style={{ backgroundColor: btnColor }}
+              transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
+            />
+          )}
+        </motion.button>
 
         {/* ── Divider ── */}
         <div className="self-stretch mx-2 mb-2" style={{ width: 1, backgroundColor: btnBorder, opacity: 0.5 }} />
@@ -625,6 +872,107 @@ function ScatteredNav() {
             clipPath: "polygon(15% 0%, 85% 0%, 53% 100%, 47% 100%)",
           }}
         />
+      </div>
+    </div>
+    </>
+  );
+}
+
+// ─── Mobile Nav ───────────────────────────────────────────────────────────────
+function MobileNav() {
+  const { theme, toggle } = useTheme();
+  const isLight = theme === "light";
+  const [activeSection, setActiveSection] = useState("home");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const scrollEl = document.querySelector("main") as HTMLElement | null;
+    const onScroll = () => {
+      const idx = Math.min(Math.round((scrollEl?.scrollTop ?? 0) / window.innerHeight), 4);
+      const found = Object.keys(SECTION_INDEX).find(k => SECTION_INDEX[k] === idx);
+      setActiveSection(found ?? "home");
+    };
+    onScroll();
+    scrollEl?.addEventListener("scroll", onScroll, { passive: true });
+    return () => scrollEl?.removeEventListener("scroll", onScroll);
+  }, [mounted]);
+
+  const navigateTo = (id: string) => {
+    const scrollEl = document.querySelector("main") as HTMLElement | null;
+    if (!scrollEl) return;
+    scrollEl.scrollTo({ top: SECTION_INDEX[id] * scrollEl.clientHeight, behavior: "smooth" });
+  };
+
+  if (!mounted) return null;
+
+  const btnColor   = isLight ? "var(--sage-deep)"          : "var(--navy)";
+  const muted      = isLight ? "rgba(0,0,0,0.35)"          : "rgba(255,255,255,0.35)";
+  const activeBg   = isLight ? "rgba(107,122,86,0.18)"     : "rgba(30,63,122,0.18)";
+  const pillBg     = isLight ? "rgba(245,244,240,0.82)"    : "rgba(8,8,18,0.75)";
+  const pillBorder = isLight ? "rgba(0,0,0,0.10)"          : "rgba(255,255,255,0.09)";
+
+  const ALL_ITEMS: { id: string; icon: React.ReactNode; label: string }[] = [
+    { id: "home",     icon: <HomeNavIcon size={22} isOpen={activeSection === "home"} />, label: "Home"     },
+    { id: "projects", icon: <ImagesBadge folderSize={{ width: 24, height: 19 }} />,      label: "Projects" },
+    { id: "skills",   icon: <SkillsNavIcon size={22} isOpen={activeSection === "skills"} />, label: "Skills"   },
+    { id: "about",    icon: <PersonNavIcon size={22} isActive={activeSection === "about"} />, label: "About"    },
+    { id: "contact",  icon: <MailNavIcon   size={22} isOpen={activeSection === "contact"} />, label: "Contact"  },
+  ];
+
+  return (
+    <div
+      className="fixed bottom-4 left-4 right-4 md:hidden flex justify-center pointer-events-none"
+      style={{ zIndex: 5000 }}
+    >
+      <div
+        className="flex items-center rounded-full px-2 pointer-events-auto"
+        style={{
+          backgroundColor: pillBg,
+          border: `1px solid ${pillBorder}`,
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
+        }}
+      >
+        {ALL_ITEMS.map((item) => {
+          const active = activeSection === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => navigateTo(item.id)}
+              disabled={active}
+              className="relative flex flex-col items-center justify-center px-3 py-2 rounded-full transition-colors"
+              style={{
+                color: active ? btnColor : muted,
+                backgroundColor: active ? activeBg : "transparent",
+                cursor: active ? "default" : "pointer",
+                minWidth: 44,
+              }}
+            >
+              <span className="leading-none flex items-center justify-center">{item.icon}</span>
+              <span
+                className="text-[9px] mt-0.5 font-medium"
+                style={{ fontFamily: "var(--font-sub)", letterSpacing: "0.02em" }}
+              >
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+
+        {/* Divider */}
+        <div className="self-stretch my-2 mx-1" style={{ width: 1, backgroundColor: pillBorder }} />
+
+        {/* Theme toggle */}
+        <button
+          onClick={toggle}
+          className="flex items-center justify-center px-3 py-2 rounded-full"
+          style={{ color: muted, cursor: "pointer", minWidth: 36 }}
+        >
+          {theme === "dark" ? <IconSun size={16} /> : <IconMoon size={16} />}
+        </button>
       </div>
     </div>
   );
@@ -673,7 +1021,9 @@ export function PageLoader({ children }: { children?: ReactNode }) {
       {(!show || phase === "done") && (
         <>
           <ScatteredNav />
+          <MobileNav />
           <NavTransitionOverlay />
+          <SpillOverlay />
         </>
       )}
     </>

@@ -7,11 +7,19 @@ import { IconBrandGithub, IconBrandLinkedin, IconMail, IconPhone, IconSend, Icon
 import { Magnetic } from "@/components/ui/magnetic";
 
 const socials = [
-  { label: "GitHub",      icon: <IconBrandGithub size={20} />,   href: "https://github.com/GeodeInc" },
-  { label: "LinkedIn",    icon: <IconBrandLinkedin size={20} />, href: "https://www.linkedin.com/in/taylor-houghtaling-19b333382/" },
-  { label: "Email",       icon: <IconMail size={20} />,          href: "mailto:taylor@tenzorllc.com" },
-  { label: "Phone",       icon: <IconPhone size={20} />,         href: "tel:+16092252579" },
+  { label: "GitHub",   icon: <IconBrandGithub size={20} />,   href: "https://github.com/GeodeInc" },
+  { label: "LinkedIn", icon: <IconBrandLinkedin size={20} />, href: "https://www.linkedin.com/in/taylor-houghtaling-19b333382/" },
+  { label: "Email",    icon: <IconMail size={20} />,          href: "mailto:taylor@tenzorllc.com" },
+  { label: "Phone",    icon: <IconPhone size={20} />,         href: "tel:+16092252579" },
 ];
+
+function validate(form: { name: string; email: string; message: string }) {
+  return {
+    name:    form.name.trim().length === 0    ? "Name is required" : "",
+    email:   !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) ? "Valid email required" : "",
+    message: form.message.trim().length < 10 ? "Message must be at least 10 characters" : "",
+  };
+}
 
 export const ContactSection = () => {
   const ref = useRef(null);
@@ -21,10 +29,20 @@ export const ContactSection = () => {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [rateLimited, setRateLimited] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [touched, setTouched] = useState({ name: false, email: false, message: false });
+
+  const errors = validate(form);
+  const isValid = !errors.name && !errors.email && !errors.message;
+
+  const touch = (field: keyof typeof touched) =>
+    setTouched((t) => ({ ...t, [field]: true }));
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setTouched({ name: true, email: true, message: true });
+    if (!isValid) return;
     setLoading(true);
     setError("");
     try {
@@ -33,25 +51,27 @@ export const ContactSection = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error();
-      await res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? "");
       setSent(true);
       setForm({ name: "", email: "", message: "" });
+      setTouched({ name: false, email: false, message: false });
       setTimeout(() => setSent(false), 4000);
-    } catch {
-      setError("Something went wrong. Try emailing directly.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.toLowerCase().includes("too many")) setRateLimited(true);
+      setError(msg || "Something went wrong. Try emailing taylor@tenzorllc.com directly.");
     } finally {
       setLoading(false);
     }
   };
 
-  const inputBase: React.CSSProperties = {
-    borderColor: isLight ? "rgba(0,0,0,0.1)"  : "rgba(255,255,255,0.07)",
-    backgroundColor: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.03)",
-    color: isLight ? "var(--navy)" : "#ffffff",
-  };
-  const inputFocusBorder = isLight ? "rgba(0,0,0,0.25)" : "var(--navy-border-lg)";
-  const inputBlurBorder  = isLight ? "rgba(0,0,0,0.1)"  : "rgba(255,255,255,0.07)";
+  const inputCls = `w-full rounded-xl border px-4 py-3 outline-none transition-colors placeholder-neutral-700 ${
+    isLight
+      ? "bg-black/[0.03] text-[var(--navy)] border-black/10 focus:border-black/25"
+      : "bg-white/[0.03] text-white border-white/[0.07] focus:border-[var(--navy-border-lg)]"
+  }`;
+
   const socialBorder = isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.05)";
   const socialBg     = isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)";
   const footerBorder = isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.04)";
@@ -73,56 +93,67 @@ export const ContactSection = () => {
 
         <div className="grid grid-cols-1 gap-6 lg:gap-12 lg:grid-cols-2">
           <motion.div initial={{ opacity: 0, x: -30 }} animate={isInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }}>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {[
-                { label: "Name",  type: "text",  key: "name",  ph: "Taylor Houghtaling" },
-                { label: "Email", type: "email", key: "email", ph: "taylor@tenzorllc.com" },
-              ].map((f) => (
-                <div key={f.key}>
-                  <label className="mb-2 block text-sm font-medium text-neutral-500">{f.label}</label>
-                  <input type={f.type} required value={form[f.key as keyof typeof form]}
-                    onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                    className="w-full rounded-xl border px-4 py-3 placeholder-neutral-700 outline-none transition-all"
-                    style={inputBase}
-                    onFocus={(e) => (e.target.style.borderColor = inputFocusBorder)}
-                    onBlur={(e)  => (e.target.style.borderColor = inputBlurBorder)}
-                    placeholder={f.ph} />
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
+              {(["name", "email"] as const).map((key) => (
+                <div key={key}>
+                  <label className="mb-2 block text-sm font-medium text-neutral-500 capitalize">{key}</label>
+                  <input
+                    type={key === "email" ? "email" : "text"}
+                    value={form[key]}
+                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                    onBlur={() => touch(key)}
+                    className={inputCls}
+                    placeholder={key === "email" ? "taylor@tenzorllc.com" : "Taylor Houghtaling"}
+                  />
+                  {touched[key] && errors[key] && (
+                    <p className="mt-1 text-xs text-red-400">{errors[key]}</p>
+                  )}
                 </div>
               ))}
               <div>
                 <label className="mb-2 block text-sm font-medium text-neutral-500">Message</label>
-                <textarea required rows={4} value={form.message}
+                <textarea
+                  rows={4}
+                  value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  className="w-full rounded-xl border px-4 py-3 placeholder-neutral-700 outline-none transition-all resize-none"
-                  style={inputBase}
-                  onFocus={(e) => (e.target.style.borderColor = inputFocusBorder)}
-                  onBlur={(e)  => (e.target.style.borderColor = inputBlurBorder)}
-                  placeholder="Hey Taylor, I'd love to collaborate on..." />
+                  onBlur={() => touch("message")}
+                  className={`${inputCls} resize-none`}
+                  placeholder="Hey Taylor, I'd love to collaborate on..."
+                />
+                {touched.message && errors.message && (
+                  <p className="mt-1 text-xs text-red-400">{errors.message}</p>
+                )}
               </div>
               <Magnetic>
-                <motion.button type="submit" disabled={loading} whileHover={{ scale: loading ? 1 : 1.03, filter: loading ? "none" : "brightness(1.1)" }} whileTap={{ scale: loading ? 1 : 0.97 }}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                <motion.button
+                  type="submit"
+                  disabled={loading || rateLimited}
+                  whileHover={{ scale: (loading || rateLimited) ? 1 : 1.03, filter: (loading || rateLimited) ? "none" : "brightness(1.1)" }}
+                  whileTap={{ scale: (loading || rateLimited) ? 1 : 0.97 }}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold cursor-pointer disabled:cursor-not-allowed"
                   style={{
-                    backgroundColor: sent ? "#2a7a4a" : "var(--navy-dark)",
-                    color: "#ffffff",
-                    boxShadow: sent ? "0 8px 28px rgba(42,122,74,0.25)" : "0 8px 28px var(--navy-shadow)",
-                  }}>
-                  {sent ? <><IconCheck size={16} /> Message Sent!</> : loading ? <>Sending…</> : <><IconSend size={16} /> Send Message</>}
+                    backgroundColor: rateLimited ? "rgba(120,120,120,0.25)" : sent ? "#2a7a4a" : "var(--navy-dark)",
+                    color: rateLimited ? "rgba(255,255,255,0.35)" : "#ffffff",
+                    boxShadow: rateLimited ? "none" : sent ? "0 8px 28px rgba(42,122,74,0.25)" : "0 8px 28px var(--navy-shadow)",
+                  }}
+                >
+                  {sent ? <><IconCheck size={16} /> Message Sent!</> : loading ? "Sending…" : rateLimited ? "Rate limited — try again later" : <><IconSend size={16} /> Send Message</>}
                 </motion.button>
               </Magnetic>
               {error && <p className="mt-2 text-center text-xs text-red-400">{error}</p>}
             </form>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, x: 30 }} animate={isInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col justify-between space-y-4 md:space-y-8">
+          <motion.div
+            initial={{ opacity: 0, x: 30 }} animate={isInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col justify-between space-y-4 md:space-y-8"
+          >
             <div>
               <h3 className="mb-2 text-lg font-semibold" style={{ fontFamily: "var(--font-sub)", color: isLight ? "var(--navy)" : "#ffffff" }}>Get in touch</h3>
               <p className="text-neutral-400">
-                I&apos;m currently open to new opportunities. Whether you have a question or
-                just want to say hi — I&apos;ll get back to you!
+                I&apos;m currently open to new opportunities. Whether you have a question or just want to say hi — I&apos;ll get back to you!
               </p>
-              <a href="mailto:taylor@tenzorllc.com" className="mt-4 inline-block transition-colors hover:opacity-80"
+              <a href="mailto:taylor@tenzorllc.com" className="mt-4 inline-block transition-opacity hover:opacity-70"
                 style={{ color: "var(--navy)" }}>
                 taylor@tenzorllc.com →
               </a>
@@ -133,13 +164,15 @@ export const ContactSection = () => {
               <div className="grid grid-cols-2 gap-3">
                 {socials.map((s) => (
                   <Magnetic key={s.label} strength={0.3}>
-                    <a href={s.href} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-all hover:scale-[1.04] active:scale-[0.97]"
-                      style={{ borderColor: socialBorder, backgroundColor: socialBg, color: isLight ? "rgba(0,0,0,0.5)" : undefined }}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--navy-border)"; e.currentTarget.style.color = "var(--navy)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = socialBorder; e.currentTarget.style.color = isLight ? "rgba(0,0,0,0.5)" : ""; }}>
-                      {s.icon}
-                      {s.label}
+                    <a
+                      href={s.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-all hover:scale-[1.04] active:scale-[0.97]"
+                      style={{ borderColor: socialBorder, backgroundColor: socialBg, color: isLight ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)" }}
+                    >
+                      <span className="transition-colors group-hover:text-[var(--navy)]">{s.icon}</span>
+                      <span className="transition-colors group-hover:text-[var(--navy)]">{s.label}</span>
                     </a>
                   </Magnetic>
                 ))}

@@ -89,25 +89,36 @@ export const SkillsSection = () => {
           <InfiniteMovingCards items={row3} direction="left"  speed="slow" />
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-6 md:mt-10 grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
-          {categories.map((cat) => (
-            <div key={cat.label} className="rounded-2xl border p-5"
-              style={{ borderColor: cardBorder, backgroundColor: cardBg }}>
+        <div className="mt-6 md:mt-10 grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
+          {categories.map((cat, catIdx) => (
+            <motion.div
+              key={cat.label}
+              initial={{ opacity: 0, y: 24 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.35 + catIdx * 0.12, ease: [0.22, 1, 0.36, 1] }}
+              className="rounded-2xl border p-5"
+              style={{ borderColor: cardBorder, backgroundColor: cardBg }}
+            >
               <div className="mb-3 text-xs font-semibold uppercase tracking-widest" style={{ color: cat.color, fontFamily: "var(--font-sub)" }}>
                 {cat.label}
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {cat.skills.map((s) => (
-                  <span key={s} className="rounded-full px-2.5 py-1 text-xs"
-                    style={{ backgroundColor: tagBg, border: `1px solid ${tagBorder}`, color: tagColor ?? "rgb(212 212 212)" }}>
+                {cat.skills.map((s, skillIdx) => (
+                  <motion.span
+                    key={s}
+                    initial={{ opacity: 0, scale: 0.75 }}
+                    animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                    transition={{ duration: 0.25, delay: 0.45 + catIdx * 0.12 + skillIdx * 0.045, ease: "easeOut" }}
+                    className="rounded-full px-2.5 py-1 text-xs"
+                    style={{ backgroundColor: tagBg, border: `1px solid ${tagBorder}`, color: tagColor ?? "rgb(212 212 212)", display: "inline-block" }}
+                  >
                     {s}
-                    </span>
+                  </motion.span>
                 ))}
               </div>
-            </div>
+            </motion.div>
           ))}
-        </motion.div>
+        </div>
 
       </div>
     </section>

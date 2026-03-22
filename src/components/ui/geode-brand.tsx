@@ -6,7 +6,6 @@ import { useTheme } from "@/contexts/theme-context";
 export const GeodeBrand = () => {
   const { theme } = useTheme();
   const isLight = theme === "light";
-  const showWordmark = true;
   const iconControls = useAnimation();
 
   useEffect(() => {
@@ -29,7 +28,6 @@ export const GeodeBrand = () => {
       rel="noopener noreferrer"
       className="fixed left-6 top-5 z-[5000] flex items-center"
     >
-      {/* Icon — drops in on load, reanimates after nav transition */}
       <motion.img
         src="/geodeinc_icon_only.svg"
         alt="GeodeInc"
@@ -39,24 +37,16 @@ export const GeodeBrand = () => {
         initial={{ opacity: 0, scale: 0.6, rotate: -10 }}
         animate={iconControls}
       />
-
-      {/* Wordmark — clips and slides in/out */}
       <motion.div
         className="hidden sm:block overflow-hidden"
         initial={{ maxWidth: 0, opacity: 0, marginLeft: 0 }}
-      animate={{
-          maxWidth: showWordmark ? 200 : 0,
-          opacity: showWordmark ? 1 : 0,
-          marginLeft: showWordmark ? 10 : 0,
-        }}
-        transition={{ duration: showWordmark ? 0.4 : 0.9, ease: [0.4, 0, 0.2, 1] }}
+        animate={{ maxWidth: 200, opacity: 1, marginLeft: 10 }}
+        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
       >
-        <motion.img
+        <img
           src={isLight ? "/geodeinc_wordmark_only_light.svg" : "/geodeinc_wordmark_only.svg"}
           alt="GeodeInc"
           className="h-7 w-auto object-contain block"
-          animate={{ x: showWordmark ? 0 : -8 }}
-          transition={{ duration: showWordmark ? 0.4 : 0.9, ease: [0.4, 0, 0.2, 1] }}
         />
       </motion.div>
     </motion.a>

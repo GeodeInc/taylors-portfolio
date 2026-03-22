@@ -23,54 +23,49 @@ export const InfiniteMovingCards = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLUListElement>(null);
   const [start, setStart] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     addAnimation();
   }, []);
 
+  // Pause animation when the row is scrolled out of view
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   function addAnimation() {
     if (containerRef.current && scrollerRef.current) {
-      const scrollerContent = Array.from(scrollerRef.current.children);
-      scrollerContent.forEach((item) => {
-        const duplicatedItem = item.cloneNode(true);
-        if (scrollerRef.current) {
-          scrollerRef.current.appendChild(duplicatedItem);
-        }
+      Array.from(scrollerRef.current.children).forEach((item) => {
+        scrollerRef.current!.appendChild(item.cloneNode(true));
       });
-      getDirection();
-      getSpeed();
-      setStart(true);
-    }
-  }
 
-  const getDirection = () => {
-    if (containerRef.current) {
       if (direction === "left") {
         containerRef.current.style.setProperty("--animation-direction", "forwards");
       } else {
         containerRef.current.style.setProperty("--animation-direction", "reverse");
       }
-    }
-  };
 
-  const getSpeed = () => {
-    if (containerRef.current) {
-      if (speed === "fast") {
-        containerRef.current.style.setProperty("--animation-duration", "20s");
-      } else if (speed === "normal") {
-        containerRef.current.style.setProperty("--animation-duration", "40s");
-      } else {
-        containerRef.current.style.setProperty("--animation-duration", "80s");
-      }
+      const durations = { fast: "20s", normal: "40s", slow: "80s" };
+      containerRef.current.style.setProperty("--animation-duration", durations[speed]);
+
+      setStart(true);
     }
-  };
+  }
 
   return (
     <div
       ref={containerRef}
       className={cn(
         "scroller relative z-20 w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]",
-        className
+        className,
       )}
     >
       <ul
@@ -78,8 +73,9 @@ export const InfiniteMovingCards = ({
         className={cn(
           "flex w-max min-w-full shrink-0 flex-nowrap gap-4 py-4",
           start && "animate-scroll",
-          pauseOnHover && "hover:[animation-play-state:paused]"
+          pauseOnHover && "hover:[animation-play-state:paused]",
         )}
+        style={start ? { animationPlayState: visible ? "running" : "paused" } : undefined}
       >
         {items.map((item, idx) => (
           <li

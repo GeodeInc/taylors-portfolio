@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { getCount, increment, DAILY_LIMIT } from "@/lib/contact-counter";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -10,6 +11,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({ error: "Too many requests — try again in an hour." }, { status: 429 });
+    }
+
     if (getCount() >= DAILY_LIMIT) {
       return NextResponse.json({ error: "Daily limit reached" }, { status: 429 });
     }

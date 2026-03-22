@@ -2,7 +2,7 @@
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
-import { IconBrandGithub, IconBuildingStore, IconBrain, IconCube, IconX } from "@tabler/icons-react";
+import { IconBrandGithub, IconBuildingStore, IconBrain, IconCube, IconX, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { Magnetic } from "@/components/ui/magnetic";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 import { useTheme } from "@/contexts/theme-context";
@@ -32,15 +32,17 @@ export const POSHeader = () => {
   const [targetX, setTargetX] = useState(260);
 
   useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
     const update = () => {
-      if (!containerRef.current) return;
-      const width = containerRef.current.offsetWidth;
+      const width = el.offsetWidth;
       const cartLeftEdge = width - width * 0.28 - 32;
       setTargetX(Math.max(60, cartLeftEdge - 40 - 10));
     };
     update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   return (
@@ -178,7 +180,8 @@ export const ReflectionHeader = () => {
         <rect width="100%" height="100%" fill="url(#grid)"/>
       </svg>
 
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="relative z-10" overflow="visible">
+      {/* SVG fills the full container width, viewBox keeps coordinate space */}
+      <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="absolute inset-0 z-10">
         {/* Axis of reflection */}
         <line x1={ax1.x} y1={ax1.y} x2={ax2.x} y2={ax2.y}
           stroke="rgba(168,181,140,0.5)" strokeWidth="1" strokeDasharray="4 3"/>
@@ -194,33 +197,23 @@ export const ReflectionHeader = () => {
         {/* Axis label */}
         <text x={ax2.x - 16} y={ax2.y - 6} fill="rgba(168,181,140,0.5)" fontSize="8" fontFamily="monospace">y=x</text>
 
-        {/* Point A */}
-        <motion.circle
-          cx={aPath.x[0]} cy={aPath.y[0]} r={5}
-          animate={{ cx: aPath.x, cy: aPath.y }}
-          transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-          fill="#4a6080" stroke="rgba(74,96,128,0.6)" strokeWidth="6"/>
-        <motion.text
-          x={aPath.x[0] - 14} y={aPath.y[0] + 1}
-          animate={{ x: aPath.x.map(v => v - 14), y: aPath.y.map(v => v + 1) }}
-          transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-          fill="rgba(255,255,255,0.7)" fontSize="9" fontFamily="monospace" dominantBaseline="middle">
-          A
-        </motion.text>
+        {/* Point A — group moves as a unit so the label stays glued to the dot */}
+        <motion.g
+          animate={{ x: aPath.x, y: aPath.y }}
+          initial={{ x: aPath.x[0], y: aPath.y[0] }}
+          transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}>
+          <circle cx={0} cy={0} r={5} fill="#4a6080" stroke="rgba(74,96,128,0.6)" strokeWidth="6"/>
+          <text x={9} y={1} fill="rgba(255,255,255,0.7)" fontSize="9" fontFamily="monospace" dominantBaseline="middle">A</text>
+        </motion.g>
 
-        {/* Point B (reflection) */}
-        <motion.circle
-          cx={bPath.x[0]} cy={bPath.y[0]} r={5}
-          animate={{ cx: bPath.x, cy: bPath.y }}
-          transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-          fill="#364d63" stroke="rgba(54,77,99,0.6)" strokeWidth="6"/>
-        <motion.text
-          x={bPath.x[0] + 8} y={bPath.y[0] + 1}
-          animate={{ x: bPath.x.map(v => v + 8), y: bPath.y.map(v => v + 1) }}
-          transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-          fill="rgba(255,255,255,0.7)" fontSize="9" fontFamily="monospace" dominantBaseline="middle">
-          A&apos;
-        </motion.text>
+        {/* Point A' — label to the left so it never clips off the right edge */}
+        <motion.g
+          animate={{ x: bPath.x, y: bPath.y }}
+          initial={{ x: bPath.x[0], y: bPath.y[0] }}
+          transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}>
+          <circle cx={0} cy={0} r={5} fill="#364d63" stroke="rgba(54,77,99,0.6)" strokeWidth="6"/>
+          <text x={-22} y={1} fill="rgba(255,255,255,0.7)" fontSize="9" fontFamily="monospace" dominantBaseline="middle">A&apos;</text>
+        </motion.g>
       </svg>
     </div>
   );
@@ -296,115 +289,184 @@ export const ProjectsSection = () => {
   const tagColor    = isLight ? "rgba(0,0,0,0.5)"    : "rgba(255,255,255,0.5)";
   const modalBg     = isLight ? "#f0eeea"             : "#111111";
   const headingColor = isLight ? "var(--navy)"        : "#ffffff";
-  const [active, setActive] = useState<(typeof projects)[number] | null>(null);
-  const [domReady, setDomReady] = useState(false);
+  const [openedFromIdx, setOpenedFromIdx] = useState<number | null>(null);
+  const [currentIdx, setCurrentIdx] = useState<number | null>(null);
+  const touchStartX = useRef(0);
   const id = useId();
   const cardRef = useRef<HTMLDivElement>(null);
+  const [domReady, setDomReady] = useState(false);
+  const [spillReady, setSpillReady] = useState(true);
+
+  const active = currentIdx !== null ? projects[currentIdx] : null;
+  const isModalOpen = openedFromIdx !== null;
+
+  const openAt = (i: number) => {
+    setOpenedFromIdx(i);
+    setCurrentIdx(i);
+  };
+  const close  = () => { setOpenedFromIdx(null); setCurrentIdx(null); };
+  const goNext = () => setCurrentIdx(i => i !== null ? (i + 1) % projects.length : null);
+  const goPrev = () => setCurrentIdx(i => i !== null ? (i - 1 + projects.length) % projects.length : null);
 
   useEffect(() => { setDomReady(true); }, []);
 
   useEffect(() => {
+    const onHide = () => setSpillReady(false);
+    const onDone = () => setSpillReady(true);
+    window.addEventListener("projects-spill-hide", onHide);
+    window.addEventListener("projects-spill-done", onDone);
+    return () => {
+      window.removeEventListener("projects-spill-hide", onHide);
+      window.removeEventListener("projects-spill-done", onDone);
+    };
+  }, []);
+
+  useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setActive(null);
+      if (e.key === "Escape") close();
+      if (isModalOpen && e.key === "ArrowRight") goNext();
+      if (isModalOpen && e.key === "ArrowLeft")  goPrev();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [isModalOpen]);
 
-  useOutsideClick(cardRef, () => setActive(null));
+  useOutsideClick(cardRef, close);
 
   const modal = domReady && createPortal(
-    <>
-      <AnimatePresence>
-        {active && (
+    <AnimatePresence>
+      {isModalOpen && active && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={active ? `${active.title} project details` : "Project details"}
+          className="fixed inset-0 grid place-items-center z-[9999]"
+        >
+          {/* Backdrop */}
           <motion.div
+            className="absolute inset-0 backdrop-blur-sm"
+            style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xl z-[9998]"
           />
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {active && (
-          <div className="fixed inset-0 grid place-items-center z-[9999]">
-            <motion.button
-              layout
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, transition: { duration: 0.05 } }}
-              className="flex absolute top-4 right-4 items-center justify-center bg-neutral-800 hover:bg-neutral-700 rounded-full h-8 w-8"
-              onClick={() => setActive(null)}
-            >
-              <IconX size={14} className="text-white" />
-            </motion.button>
-            <motion.div
-              layoutId={`card-${active.title}-${id}`}
-              ref={cardRef}
-              className="w-full max-w-[500px] h-full md:h-fit md:max-h-[90%] flex flex-col sm:rounded-3xl overflow-hidden border border-white/[0.12]"
-              style={{ backgroundColor: modalBg }}
-            >
-              <motion.div layoutId={`header-${active.title}-${id}`}>
-                <div className="w-full h-64">
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.1 } }}
+            className="flex absolute top-4 right-4 items-center justify-center bg-neutral-800 hover:bg-neutral-700 rounded-full h-8 w-8 z-10"
+            aria-label="Close project details"
+            onClick={close}
+          >
+            <IconX size={14} className="text-white" />
+          </motion.button>
+          <motion.div
+            ref={cardRef}
+            layoutId={`card-${openedFromIdx}-${id}`}
+            className="w-full max-w-[500px] h-full md:h-fit md:max-h-[90%] flex flex-col sm:rounded-3xl overflow-hidden border border-white/[0.12] relative"
+            style={{ backgroundColor: modalBg }}
+            exit={{ opacity: 0, scale: 0.94, y: 16, transition: { duration: 0.18 } }}
+            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+            onTouchEnd={(e) => {
+              const delta = touchStartX.current - e.changedTouches[0].clientX;
+              if (Math.abs(delta) > 50) delta > 0 ? goNext() : goPrev();
+            }}
+          >
+              {/* Header with prev/next arrows */}
+              <div className="relative w-full h-64">
+                <motion.div
+                  key={`hc-${currentIdx}`}
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+                  className="w-full h-full"
+                >
                   {active.header}
+                </motion.div>
+                <button
+                  aria-label="Previous project"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-colors"
+                  style={{ zIndex: 20 }}
+                  onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                >
+                  <IconChevronLeft size={16} />
+                </button>
+                <button
+                  aria-label="Next project"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-colors"
+                  style={{ zIndex: 20 }}
+                  onClick={(e) => { e.stopPropagation(); goNext(); }}
+                >
+                  <IconChevronRight size={16} />
+                </button>
+              </div>
+
+              {/* Content */}
+              <motion.div
+                key={`content-${currentIdx}`}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+              >
+                <div className="p-5">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-semibold text-lg" style={{ color: headingColor }}>
+                        {active.title}
+                        {active.badge && (
+                          <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-normal align-middle"
+                            style={{ backgroundColor: "var(--navy-fill-md)", color: "var(--navy)" }}>
+                            {active.badge}
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-neutral-400 text-sm mt-1">{active.description}</p>
+                    </div>
+                    <a
+                      href={active.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-4 shrink-0 px-4 py-2 text-sm rounded-full font-medium border text-white"
+                      style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)" }}
+                    >
+                      Visit
+                    </a>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-4">
+                    {active.tags.map((tag) => (
+                      <span key={tag} className="rounded-full px-2.5 py-0.5 text-xs border"
+                        style={{ borderColor: tagBorder, color: tagColor }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                {/* Project dot indicators */}
+                <div className="flex justify-center gap-2 pb-4">
+                  {projects.map((p, i) => (
+                    <motion.button
+                      key={i}
+                      aria-label={`View ${p.title}`}
+                      aria-current={currentIdx === i ? "true" : undefined}
+                      onClick={() => setCurrentIdx(i)}
+                      animate={{
+                        width: currentIdx === i ? 18 : 6,
+                        background: currentIdx === i ? "var(--navy)" : "rgba(255,255,255,0.22)",
+                      }}
+                      transition={{ type: "spring", stiffness: 480, damping: 28 }}
+                      style={{
+                        height: 6,
+                        borderRadius: 9999,
+                        border: "none",
+                        padding: 0,
+                        cursor: currentIdx === i ? "default" : "pointer",
+                        flexShrink: 0,
+                      }}
+                    />
+                  ))}
                 </div>
               </motion.div>
-              <div className="p-5">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <motion.h3
-                      layoutId={`title-${active.title}-${id}`}
-                      className="font-semibold text-lg" style={{ color: headingColor }}
-                    >
-                      {active.title}
-                      {active.badge && (
-                        <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-normal align-middle"
-                          style={{ backgroundColor: "var(--navy-fill-md)", color: "var(--navy)" }}>
-                          {active.badge}
-                        </span>
-                      )}
-                    </motion.h3>
-                    <motion.p
-                      layoutId={`desc-${active.title}-${id}`}
-                      className="text-neutral-400 text-sm mt-1"
-                    >
-                      {active.description}
-                    </motion.p>
-                  </div>
-                  <motion.a
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    href={active.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-4 shrink-0 px-4 py-2 text-sm rounded-full font-medium border text-white"
-                    style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)" }}
-                  >
-                    Visit
-                  </motion.a>
-                </div>
-                <motion.div
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex flex-wrap gap-1.5 mt-4"
-                >
-                  {active.tags.map((tag) => (
-                    <span key={tag} className="rounded-full px-2.5 py-0.5 text-xs border"
-                      style={{ borderColor: tagBorder, color: tagColor }}>
-                      {tag}
-                    </span>
-                  ))}
-                </motion.div>
-              </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-    </>,
+    ,
     document.body
   );
 
@@ -426,49 +488,69 @@ export const ProjectsSection = () => {
           </h2>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }}>
+        <div>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-            {projects.map((p) => (
+            {projects.map((p, i) => (
               <motion.li
-                layoutId={`card-${p.title}-${id}`}
                 key={p.title}
-                onClick={() => setActive(p)}
-                className="rounded-2xl border cursor-pointer overflow-hidden flex flex-col hover:border-white/[0.15] transition-colors"
-                style={{ borderColor: cardBorder, backgroundColor: cardBg }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Open ${p.title} project`}
+                onClick={() => openAt(i)}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && openAt(i)}
+                className="rounded-2xl border cursor-pointer overflow-hidden flex flex-col"
+                style={{
+                  borderColor: cardBorder,
+                  backgroundColor: cardBg,
+                  // Stage 1: card shell (border + bg) fades in first
+                  opacity: isInView && spillReady ? 1 : 0,
+                  transition: isInView && spillReady
+                    ? `opacity 0.45s ease-out ${i * 0.18}s, border-color 150ms`
+                    : "border-color 150ms",
+                }}
                 whileHover={{ scale: 1.015 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
-                <motion.div layoutId={`header-${p.title}-${id}`} className="flex-1 min-h-40">
-                  <div className="w-full h-full">
-                    {p.header}
+                {/* Stage 2: content fades in after the shell is visible */}
+                <div
+                  className="flex flex-col flex-1"
+                  style={{
+                    opacity: isInView && spillReady ? 1 : 0,
+                    transition: isInView && spillReady
+                      ? `opacity 0.9s ease-out ${i * 0.18 + 0.2}s`
+                      : "none",
+                  }}
+                >
+                  <div className="flex-1 min-h-40">
+                    <div className="w-full h-full" data-project-header="true">
+                      {p.header}
+                    </div>
                   </div>
-                </motion.div>
-                <div className="p-4 flex-shrink-0">
-                  <motion.h3
-                    layoutId={`title-${p.title}-${id}`}
-                    className="font-semibold text-base" style={{ color: headingColor }}
-                  >
-                    {p.title}
-                    {p.badge && (
-                      <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-normal align-middle"
-                        style={{ backgroundColor: "var(--navy-fill-md)", color: "var(--navy)" }}>
-                        {p.badge}
-                      </span>
-                    )}
-                  </motion.h3>
-                  <motion.p
-                    layoutId={`desc-${p.title}-${id}`}
-                    className="text-neutral-500 text-sm mt-1 line-clamp-2"
-                  >
-                    {p.description}
-                  </motion.p>
+                  <div className="p-4 flex-shrink-0">
+                    <h3 className="font-semibold text-base" style={{ color: headingColor }}>
+                      {p.title}
+                      {p.badge && (
+                        <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-normal align-middle"
+                          style={{ backgroundColor: "var(--navy-fill-md)", color: "var(--navy)" }}>
+                          {p.badge}
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-neutral-500 text-sm mt-1 line-clamp-2">{p.description}</p>
+                  </div>
                 </div>
               </motion.li>
             ))}
           </ul>
-        </motion.div>
+        </div>
 
-        <motion.div initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ duration: 0.6, delay: 0.5 }} className="mt-6 md:mt-12 text-center">
+        <div
+          className="mt-6 md:mt-12 text-center"
+          style={{
+            opacity: isInView && spillReady ? 1 : 0,
+            transition: isInView && spillReady ? "opacity 1s ease-in 0.54s" : "none",
+          }}
+        >
           <Magnetic>
             <a href="https://github.com/GeodeInc" target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-6 py-3 text-sm font-medium text-neutral-400 transition-all hover:text-white hover:bg-white/[0.07] hover:scale-[1.05] hover:border-white/[0.15] active:scale-[0.97]">
@@ -476,7 +558,7 @@ export const ProjectsSection = () => {
               View All on GitHub
             </a>
           </Magnetic>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

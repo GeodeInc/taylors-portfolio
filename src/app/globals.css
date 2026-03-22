@@ -215,6 +215,10 @@
   animation: scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite;
 }
 
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
+
 /* Grid background pattern */
 .bg-grid-white\/\[0\.02\] {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(255 255 255 / 0.02)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
@@ -287,4 +291,39 @@ section {
    Using CSS (not React style prop) so JS rAF writes are never overwritten by React re-renders. */
 .svg-mask-reveal {
   clip-path: circle(0px at 50% 50%);
+}
+
+/* ── Skip-to-content link ── */
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  padding: 10px 24px;
+  border-radius: 0 0 8px 8px;
+  background: var(--navy, #2a4a8a);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.15s ease;
+  white-space: nowrap;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* ── Global focus-visible ring ──
+   Only shows for keyboard navigation (not mouse clicks). */
+:focus-visible {
+  outline: 2px solid var(--navy, #2a4a8a);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Inputs/textareas keep their own focus style via class */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
 }

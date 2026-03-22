@@ -32,14 +32,17 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Taylor Houghtaling – Software Engineer & Co-Founder",
-  description: "Portfolio of Taylor Houghtaling — Full Stack Developer & Creative Technologist building extraordinary digital experiences.",
+  title: "Taylor Houghtaling – Front-End Developer & Co-Founder",
+  description: "Portfolio of Taylor Houghtaling — Front-End Developer & Co-Founder of Tenzor LLC, specializing in React, Next.js, and polished UI/UX.",
   keywords: [
     "Taylor Houghtaling",
     "Taylor Houghtaling developer",
     "Taylor Houghtaling portfolio",
-    "Full Stack Developer",
-    "Creative Technologist",
+    "Front-End Developer",
+    "React Developer",
+    "Next.js",
+    "UI/UX",
+    "Tenzor LLC",
     "web developer",
     "software engineer",
   ],
@@ -47,14 +50,14 @@ export const metadata: Metadata = {
   creator: "Taylor Houghtaling",
   openGraph: {
     type: "website",
-    title: "Taylor Houghtaling – Software Engineer & Co-Founder",
-    description: "Portfolio of Taylor Houghtaling — Full Stack Developer & Creative Technologist building extraordinary digital experiences.",
+    title: "Taylor Houghtaling – Front-End Developer & Co-Founder",
+    description: "Portfolio of Taylor Houghtaling — Front-End Developer & Co-Founder of Tenzor LLC, specializing in React, Next.js, and polished UI/UX.",
     siteName: "Taylor Houghtaling",
   },
   twitter: {
-    card: "summary",
-    title: "Taylor Houghtaling – Software Engineer & Co-Founder",
-    description: "Portfolio of Taylor Houghtaling — Full Stack Developer & Creative Technologist building extraordinary digital experiences.",
+    card: "summary_large_image",
+    title: "Taylor Houghtaling – Front-End Developer & Co-Founder",
+    description: "Portfolio of Taylor Houghtaling — Front-End Developer & Co-Founder of Tenzor LLC, specializing in React, Next.js, and polished UI/UX.",
     creator: "@taylorhoughtaling",
   },
 };
@@ -71,6 +74,7 @@ export default function RootLayout({
         style={{ backgroundColor: "var(--page-bg)" }}
       >
         <ThemeProvider>
+          <a href="#main-content" className="skip-link">Skip to content</a>
           {children}
         </ThemeProvider>
       </body>
