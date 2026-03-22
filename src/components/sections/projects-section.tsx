@@ -296,11 +296,13 @@ export const ProjectsSection = () => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [domReady, setDomReady] = useState(false);
   const [spillReady, setSpillReady] = useState(true);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   const active = currentIdx !== null ? projects[currentIdx] : null;
   const isModalOpen = openedFromIdx !== null;
 
-  const openAt = (i: number) => {
+  const openAt = (i: number, trigger?: HTMLElement) => {
+    triggerRef.current = trigger ?? null;
     setOpenedFromIdx(i);
     setCurrentIdx(i);
   };
@@ -326,12 +328,42 @@ export const ProjectsSection = () => {
       if (e.key === "Escape") close();
       if (isModalOpen && e.key === "ArrowRight") goNext();
       if (isModalOpen && e.key === "ArrowLeft")  goPrev();
+
+      // Focus trap — keep Tab/Shift+Tab inside the modal
+      if (isModalOpen && e.key === "Tab" && cardRef.current) {
+        const focusable = Array.from(
+          cardRef.current.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          ),
+        ).filter((el) => !el.hasAttribute("disabled"));
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last  = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+        }
+      }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isModalOpen]);
 
   useOutsideClick(cardRef, close);
+
+  // Move focus into modal on open; restore to trigger on close
+  useEffect(() => {
+    if (isModalOpen) {
+      const first = cardRef.current?.querySelector<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      first?.focus();
+    } else {
+      triggerRef.current?.focus();
+      triggerRef.current = null;
+    }
+  }, [isModalOpen]);
 
   const modal = domReady && createPortal(
     <AnimatePresence>
@@ -513,8 +545,8 @@ export const ProjectsSection = () => {
                 role="button"
                 tabIndex={0}
                 aria-label={`Open ${p.title} project`}
-                onClick={() => openAt(i)}
-                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && openAt(i)}
+                onClick={(e) => openAt(i, e.currentTarget as HTMLElement)}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && openAt(i, e.currentTarget as HTMLElement)}
                 className="rounded-2xl border cursor-pointer overflow-hidden flex flex-col"
                 style={{
                   borderColor: cardBorder,
