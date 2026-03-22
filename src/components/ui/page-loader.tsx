@@ -176,8 +176,11 @@ function NavTransitionOverlay() {
 
   useEffect(() => {
     const handler = (e: Event) => {
-      // Skip 3D animation for users who prefer reduced motion
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // Skip 3D animation for reduced motion or touch devices
+      const noAnim =
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+        !window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+      if (noAnim) {
         window.dispatchEvent(new Event("nav-transition-done"));
         return;
       }
@@ -574,9 +577,10 @@ function ScatteredNav() {
     closePreviewsRef.current?.();
     const scrollEl = document.querySelector("main") as HTMLElement | null;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isTouch = !window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
     if (id === "projects" && activeSection !== "projects") {
-      if (!spillPlayedThisLoad && !reduced) {
+      if (!spillPlayedThisLoad && !reduced && !isTouch) {
         // First time navigating to projects — do spill
         spillPlayedThisLoad = true;
         doSpillRef.current = true;
