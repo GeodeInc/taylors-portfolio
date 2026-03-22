@@ -215,7 +215,8 @@
   animation: scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite;
 }
 
-.animate-scroll:hover {
+.animate-scroll:hover,
+.animate-scroll.paused {
   animation-play-state: paused;
 }
 
