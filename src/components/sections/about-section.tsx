@@ -46,11 +46,11 @@ function StatCard({ stat, isInView }: { stat: typeof stats[number]; isInView: bo
     <div className="flex flex-col items-center rounded-2xl border p-3 md:p-6 text-center"
       style={{ borderColor: surfaceBorder, backgroundColor: surfaceBg }}>
       <div style={{ color: "var(--navy)" }}>{stat.icon}</div>
-      <div className="mt-1 text-xl md:text-3xl font-bold"
+      <div className="mt-1 text-3xl md:text-5xl font-bold tracking-tight"
         style={{ background: "linear-gradient(135deg, var(--navy), var(--navy-dark))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
         {count}{stat.suffix}
       </div>
-      <div className="mt-0.5 text-xs md:text-sm text-neutral-600">{stat.label}</div>
+      <div className="mt-1 text-xs md:text-sm text-neutral-500 tracking-wide uppercase" style={{ fontFamily: "var(--font-sub)" }}>{stat.label}</div>
     </div>
   );
 }
@@ -79,7 +79,7 @@ export const AboutSection = () => {
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             About Me
           </span>
-          <h2 className="mt-3 text-3xl font-bold md:text-4xl lg:text-5xl" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>
+          <h2 className="mt-3 text-3xl font-bold md:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>
             Who I Am
           </h2>
         </motion.div>

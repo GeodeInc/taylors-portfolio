@@ -532,7 +532,7 @@ export const ProjectsSection = () => {
             style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
             Projects
           </span>
-          <h2 className="mt-3 text-3xl font-bold md:text-4xl lg:text-5xl" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>
+          <h2 className="mt-3 text-3xl font-bold md:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "var(--font-sub)", color: headingColor }}>
             Things I&apos;ve Built
           </h2>
         </motion.div>

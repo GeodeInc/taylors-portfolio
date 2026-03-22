@@ -75,10 +75,10 @@ export const SkillsSection = () => {
         <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}
           className="mb-4 md:mb-8 text-center">
           <span className="mb-4 inline-block rounded-full border px-4 py-1.5 text-sm font-medium"
-            style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
+            style={{ borderColor: "var(--sage-border)", backgroundColor: "var(--sage-fill-sm)", color: "var(--sage)" }}>
             Skills & Tech
           </span>
-          <h2 className="mt-4 text-3xl font-bold md:text-4xl lg:text-5xl" style={{ fontFamily: "var(--font-sub)", color: isLight ? "var(--navy)" : "#ffffff" }}>
+          <h2 className="mt-3 text-3xl font-bold md:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "var(--font-sub)", color: isLight ? "var(--navy)" : "#ffffff" }}>
             What I Work With
           </h2>
         </motion.div>
@@ -96,11 +96,18 @@ export const SkillsSection = () => {
               initial={{ opacity: 0, y: 24 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: 0.35 + catIdx * 0.12, ease: [0.22, 1, 0.36, 1] }}
-              className="rounded-2xl border p-5"
+              className="rounded-2xl border p-5 overflow-hidden relative"
               style={{ borderColor: cardBorder, backgroundColor: cardBg }}
             >
-              <div className="mb-3 text-xs font-semibold uppercase tracking-widest" style={{ color: cat.color, fontFamily: "var(--font-sub)" }}>
-                {cat.label}
+              {/* Accent top stripe */}
+              <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: cat.color, opacity: 0.7 }} />
+              <div className="mb-3 flex items-center justify-between">
+                <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: cat.color, fontFamily: "var(--font-sub)" }}>
+                  {cat.label}
+                </div>
+                <div className="text-xs tabular-nums" style={{ color: cat.color, opacity: 0.5, fontFamily: "var(--font-sub)" }}>
+                  {cat.skills.length}
+                </div>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {cat.skills.map((s, skillIdx) => (

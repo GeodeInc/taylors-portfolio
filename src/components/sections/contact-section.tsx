@@ -83,10 +83,10 @@ export const ContactSection = () => {
       <div ref={ref} className="relative z-10 mx-auto max-w-4xl px-4 md:px-6 pt-4 md:pt-8 lg:pt-20">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="mb-4 md:mb-8 text-center">
           <span className="mb-4 inline-block rounded-full border px-4 py-1.5 text-sm font-medium"
-            style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}>
+            style={{ borderColor: "var(--sage-border)", backgroundColor: "var(--sage-fill-sm)", color: "var(--sage)" }}>
             Contact
           </span>
-          <h2 className="mt-3 text-3xl font-bold md:text-4xl lg:text-5xl" style={{ fontFamily: "var(--font-sub)", color: isLight ? "var(--navy)" : "#ffffff" }}>
+          <h2 className="mt-3 text-3xl font-bold md:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "var(--font-sub)", color: isLight ? "var(--navy)" : "#ffffff" }}>
             Let&apos;s Work Together
           </h2>
         </motion.div>
@@ -130,7 +130,7 @@ export const ContactSection = () => {
                   disabled={loading || rateLimited}
                   whileHover={{ scale: (loading || rateLimited) ? 1 : 1.03, filter: (loading || rateLimited) ? "none" : "brightness(1.1)" }}
                   whileTap={{ scale: (loading || rateLimited) ? 1 : 0.97 }}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold cursor-pointer disabled:cursor-not-allowed"
+                  className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-semibold cursor-pointer disabled:cursor-not-allowed"
                   style={{
                     backgroundColor: rateLimited ? "rgba(120,120,120,0.25)" : sent ? "#2a7a4a" : "var(--navy-dark)",
                     color: rateLimited ? "rgba(255,255,255,0.35)" : "#ffffff",
