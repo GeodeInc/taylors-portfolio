@@ -367,11 +367,14 @@ export const ProjectsSection = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                className="flex absolute top-4 right-4 items-center justify-center bg-neutral-800 hover:bg-neutral-700 rounded-full h-8 w-8 z-10"
+                className="flex absolute top-2 right-2 items-center justify-center rounded-full z-10"
+                style={{ width: 44, height: 44 }}
                 aria-label="Close project details"
                 onClick={close}
               >
-                <IconX size={14} className="text-white" />
+                <span className="flex items-center justify-center bg-neutral-800 hover:bg-neutral-700 rounded-full w-8 h-8 transition-colors">
+                  <IconX size={14} className="text-white" />
+                </span>
               </motion.button>
 
               {/* Header with prev/next arrows */}
@@ -385,19 +388,23 @@ export const ProjectsSection = () => {
                 </motion.div>
                 <button
                   aria-label="Previous project"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-colors"
-                  style={{ zIndex: 20 }}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center text-white"
+                  style={{ zIndex: 20, width: 44, height: 44 }}
                   onClick={(e) => { e.stopPropagation(); goPrev(); }}
                 >
-                  <IconChevronLeft size={16} />
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors">
+                    <IconChevronLeft size={16} />
+                  </span>
                 </button>
                 <button
                   aria-label="Next project"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-colors"
-                  style={{ zIndex: 20 }}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center justify-center text-white"
+                  style={{ zIndex: 20, width: 44, height: 44 }}
                   onClick={(e) => { e.stopPropagation(); goNext(); }}
                 >
-                  <IconChevronRight size={16} />
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors">
+                    <IconChevronRight size={16} />
+                  </span>
                 </button>
               </div>
 
@@ -440,27 +447,35 @@ export const ProjectsSection = () => {
                   </div>
                 </div>
                 {/* Project dot indicators */}
-                <div className="flex justify-center gap-2 pb-4">
+                <div className="flex justify-center pb-2">
                   {projects.map((p, i) => (
-                    <motion.button
+                    <button
                       key={i}
                       aria-label={`View ${p.title}`}
                       aria-current={currentIdx === i ? "true" : undefined}
                       onClick={() => setCurrentIdx(i)}
-                      animate={{
-                        width: currentIdx === i ? 18 : 6,
-                        background: currentIdx === i ? "var(--navy)" : "rgba(255,255,255,0.22)",
-                      }}
-                      transition={{ type: "spring", stiffness: 480, damping: 28 }}
                       style={{
-                        height: 6,
-                        borderRadius: 9999,
+                        width: 44,
+                        height: 44,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "none",
                         border: "none",
                         padding: 0,
                         cursor: currentIdx === i ? "default" : "pointer",
                         flexShrink: 0,
                       }}
-                    />
+                    >
+                      <motion.div
+                        animate={{
+                          width: currentIdx === i ? 18 : 6,
+                          background: currentIdx === i ? "var(--navy)" : "rgba(255,255,255,0.22)",
+                        }}
+                        transition={{ type: "spring", stiffness: 480, damping: 28 }}
+                        style={{ height: 6, borderRadius: 9999 }}
+                      />
+                    </button>
                   ))}
                 </div>
               </motion.div>
