@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 
 export const Magnetic = ({
@@ -16,9 +16,14 @@ export const Magnetic = ({
   const y = useMotionValue(0);
   const sx = useSpring(x, { stiffness: 200, damping: 18, mass: 0.5 });
   const sy = useSpring(y, { stiffness: 200, damping: 18, mass: 0.5 });
+  const [isTouch, setIsTouch] = useState(false);
+
+  useEffect(() => {
+    setIsTouch(!window.matchMedia("(hover: hover) and (pointer: fine)").matches);
+  }, []);
 
   const onMove = (e: React.MouseEvent) => {
-    if (!ref.current) return;
+    if (isTouch || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
@@ -64,6 +69,7 @@ export const MagneticGlobal = ({
   const sy = useSpring(y, { stiffness: 200, damping: 18, mass: 0.5 });
 
   useEffect(() => {
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     const onMove = (e: MouseEvent) => {
       if (!ref.current) return;
       const rect = ref.current.getBoundingClientRect();
@@ -71,7 +77,6 @@ export const MagneticGlobal = ({
       const cy = rect.top + rect.height / 2;
       const dx = e.clientX - cx;
       const dy = e.clientY - cy;
-      // Activate only when cursor is within the element bounds (same as onMouseMove)
       const hw = rect.width / 2;
       const hh = rect.height / 2;
       if (Math.abs(dx) <= hw && Math.abs(dy) <= hh) {
