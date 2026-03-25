@@ -250,7 +250,7 @@ const projects = [
   },
   {
     title: "TenzorPOS — POS & CRM Platform",
-    description: "I led the frontend development of this all-in-one point-of-sale and customer management system, focusing on creating an intuitive, responsive, and visually clean interface. Using React, Tailwind, and Framer Motion, I built interactive dashboards for sales tracking, inventory management, and customer insights, ensuring a smooth user experience across devices. This project showcases my ability to translate complex business workflows into user-friendly, modern web interfaces.",
+    description: "Tenzor LLC is a software freelancing startup I co-founded alongside a team of developers. We operate end-to-end — from client scoping to final delivery — with each team member owning a distinct part of the product.\nMy role spans both design and implementation: I lead the UI/UX process, shaping how users experience everything we build, and take those designs all the way through to code. Founding Tenzor has given me hands-on experience across the full product lifecycle — from concept to shipped software.",
     icon: <IconBuildingStore size={20} />,
     tags: ["React","Next.js","TypeScript","Tailwind CSS","Framer Motion","Node.js","2025-Present"],
     className: "col-span-1",
