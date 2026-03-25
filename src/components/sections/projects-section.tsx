@@ -226,7 +226,7 @@ const projects = [
     icon: <TenzorSmallIcon />,
     tags: ["React","Next.js","TypeScript","Tailwind CSS","Framer Motion","Node.js","2025-Present"],
     className: "col-span-1",
-    badge: "Business",
+    badge: "Founder",
     header: (
       <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl relative"
         style={{ background: "linear-gradient(160deg, #1c2a3a 0%, #0d1520 100%)" }}>
@@ -260,7 +260,7 @@ const projects = [
   },
   {
     title: "Color Pallette Generator",
-    description: "Random Color Pallette Generator",
+    description: "An interactive web app that generates harmonious color palettes using complementary, analogous, and triadic color relationships. Features lockable colors, click-to-copy hex codes, responsive design, and shareable palettes, making it perfect for designers and developers.",
     icon: <IconBrain size={20} />,
     tags: ["HTML","JavaScript","CSS","2022"],
     className: "col-span-1",
