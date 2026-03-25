@@ -260,7 +260,7 @@ const projects = [
   },
   {
     title: "Color Pallette Generator",
-    description: "An interactive web app that generates harmonious color palettes using complementary, analogous, and triadic color relationships. Features lockable colors, click-to-copy hex codes, responsive design, and shareable palettes, making it perfect for designers and developers.",
+    description: "A browser-based color palette tool built with vanilla JavaScript. Generates cohesive 5-color palettes using the OKLCH perceptual color space and a randomized harmony engine — choosing between shades, analogous, and tonal shift structures on each generation.\nColors are mathematically balanced across lightness and chroma so every palette is immediately usable for UI design, branding, or interior work. Palettes are shareable via URL hash, individual hex codes are click-to-copy, and colors can be locked while the rest regenerate.",
     icon: <IconBrain size={20} />,
     tags: ["HTML","JavaScript","CSS","2022"],
     className: "col-span-1",
