@@ -269,7 +269,7 @@ const projects = [
   },
   {
     title: "Point Reflection Calculator",
-    description: "Calculates a points reflection across a line displaying through Desmos graphing calculator API.",
+    description: "A dynamic web-based calculator that reflects a point across a given line. Users input a line’s slope and y-intercept, along with a point’s coordinates. The calculator computes the perpendicular line, midpoint, and reflected point, then visualizes all elements interactively using a Desmos graph. The tool demonstrates real-time calculations, responsive UI, and mathematical visualization, ideal for geometry learning or interactive demonstrations.",
     icon: <IconCube size={20} />,
     tags: ["JavaScript","HTML","CSS","Desmos API","2022"],
     className: "col-span-1",

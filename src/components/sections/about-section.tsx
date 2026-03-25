@@ -87,6 +87,27 @@ export const AboutSection = () => {
         <div className="grid grid-cols-1 gap-6 lg:gap-12 lg:grid-cols-2">
           <motion.div initial={{ opacity: 0, x: -30 }} animate={isInView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.2 }}
             className="flex flex-col justify-center space-y-3 md:space-y-5">
+
+            {/* ── HEADSHOT SWAP ───────────────────────────────────────────────
+                When you have a professional photo:
+                1. Drop the image in /public/headshot.jpg
+                2. Uncomment the block below and delete the two <p> paragraphs
+                3. Done — tags + resume button stay as-is beneath the photo
+
+            <div className="flex flex-col space-y-4">
+              <img
+                src="/headshot.jpg"
+                alt="Taylor Houghtaling"
+                className="w-full max-h-80 object-cover object-top rounded-2xl"
+                style={{ border: `1px solid ${tagBorder}` }}
+              />
+              <p className="text-lg leading-relaxed" style={{ color: bodyColor }}>
+                I&apos;m Taylor &mdash; front-end lead and co-founder of Tenzor LLC,
+                and a Computer Engineering student at Rutgers University.
+              </p>
+            </div>
+            ─────────────────────────────────────────────────────────────────── */}
+
             <p className="text-lg leading-relaxed" style={{ color: bodyColor }}>
               I&apos;m Taylor — co-founder of Tenzor LLC, where we build custom web apps, POS systems, and tools for real businesses.
             </p>
