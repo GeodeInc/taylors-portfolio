@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Should AI Be Allowed in Schools?</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: #1a1a1a; --paper: #f5f0e8; --accent: #c8472a;
+    --steel: #3d5a73; --mist: #e8e2d6; --gold: #d4a843;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-weight: 300; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; opacity: 0.6; }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; padding: 1rem 3rem; background: rgba(245,240,232,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--mist); }
+  .nav-logo { font-family: var(--serif); font-weight: 700; font-size: 1rem; letter-spacing: 0.05em; color: var(--ink); text-decoration: none; }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); text-decoration: none; opacity: 0.6; transition: opacity 0.2s; }
+  .nav-links a:hover { opacity: 1; }
+  .nav-download { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: white; text-decoration: none; background: var(--accent); padding: 0.4rem 1rem; border-radius: 2rem; transition: opacity 0.2s; }
+  .nav-download:hover { opacity: 0.85; }
+
+  .hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; position: relative; padding-top: 64px; }
+  .hero-left { background: var(--ink); display: flex; flex-direction: column; justify-content: center; padding: 5rem 4rem 5rem 5rem; position: relative; overflow: hidden; }
+  .hero-left::after { content: 'AI'; position: absolute; bottom: -2rem; left: -1rem; font-family: var(--serif); font-size: 20rem; font-weight: 900; color: rgba(255,255,255,0.03); line-height: 1; pointer-events: none; }
+  .hero-tag { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+  .hero-tag::before { content: ''; display: block; width: 2rem; height: 1px; background: var(--accent); }
+  .hero-question { font-family: var(--serif); font-size: clamp(2.2rem, 4vw, 3.4rem); font-weight: 900; color: white; line-height: 1.1; margin-bottom: 2rem; }
+  .hero-question em { color: var(--gold); font-style: italic; }
+  .hero-sub { font-size: 0.9rem; color: rgba(255,255,255,0.5); line-height: 1.7; max-width: 30ch; }
+  .hero-meta { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 2rem; }
+  .hero-meta-item { display: flex; flex-direction: column; gap: 0.25rem; }
+  .hero-meta-label { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.35); }
+  .hero-meta-value { font-size: 0.8rem; color: rgba(255,255,255,0.7); }
+  .hero-right { display: flex; flex-direction: column; justify-content: center; padding: 5rem 5rem 5rem 4rem; position: relative; }
+  .thesis-label { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin-bottom: 1.25rem; }
+  .thesis-text { font-family: var(--serif); font-size: clamp(1.1rem, 1.8vw, 1.4rem); line-height: 1.6; color: var(--ink); font-weight: 400; font-style: italic; }
+  .thesis-text strong { font-style: normal; font-weight: 700; color: var(--steel); }
+  .scroll-hint { position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 0.5rem; color: var(--ink); opacity: 0.3; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; animation: bob 2s ease-in-out infinite; }
+  .scroll-hint::after { content: ''; width: 1px; height: 2.5rem; background: var(--ink); }
+  @keyframes bob { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
+
+  section { position: relative; z-index: 1; }
+
+  .compare-section { background: var(--ink); padding: 6rem 5rem; overflow: hidden; }
+  .compare-section h2 { font-family: var(--serif); font-size: clamp(1.8rem,3vw,2.8rem); font-weight: 900; color: white; text-align: center; margin-bottom: 0.75rem; }
+  .compare-section h2 em { color: var(--accent); font-style: italic; }
+  .compare-section .lead { font-size: 1.05rem; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 4rem; }
+  .compare-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0; max-width: 900px; margin: 0 auto; align-items: stretch; }
+  .compare-col { padding: 2.5rem; border-radius: 1rem; }
+  .compare-col.ban { background: rgba(200,71,42,0.12); border: 1px solid rgba(200,71,42,0.25); }
+  .compare-col.teach { background: rgba(61,90,115,0.2); border: 1px solid rgba(61,90,115,0.35); }
+  .compare-divider { display: flex; align-items: center; justify-content: center; padding: 0 1.5rem; font-family: var(--serif); font-size: 1.5rem; color: rgba(255,255,255,0.2); font-style: italic; }
+  .compare-col-label { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+  .compare-col.ban .compare-col-label { color: var(--accent); }
+  .compare-col.teach .compare-col-label { color: #7db8d6; }
+  .compare-item { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem; font-size: 0.88rem; color: rgba(255,255,255,0.65); line-height: 1.5; }
+  .compare-item .icon { font-size: 0.8rem; margin-top: 0.15rem; flex-shrink: 0; }
+  .compare-col.ban .icon { color: var(--accent); }
+  .compare-col.teach .icon { color: #7db8d6; }
+
+  .stats-section { background: var(--steel); padding: 5rem; }
+  .stats-section h2 { font-family: var(--serif); font-size: clamp(1.8rem,3vw,2.8rem); font-weight: 900; color: white; text-align: center; margin-bottom: 3rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
+  .stat-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 1rem; padding: 2.5rem 2rem; text-align: center; transition: background 0.3s, transform 0.3s; }
+  .stat-card:hover { background: rgba(255,255,255,0.12); transform: translateY(-4px); }
+  .stat-number { font-family: var(--serif); font-size: 3.5rem; font-weight: 900; color: var(--gold); line-height: 1; margin-bottom: 0.5rem; }
+  .stat-label { font-size: 0.82rem; color: rgba(255,255,255,0.6); line-height: 1.5; }
+  .stat-source { font-size: 0.7rem; color: rgba(255,255,255,0.35); margin-top: 0.75rem; font-style: italic; }
+
+  .arg-section { padding: 6rem 5rem; display: grid; grid-template-columns: 1fr 2fr; gap: 5rem; max-width: 1200px; margin: 0 auto; align-items: start; }
+  .arg-section.reverse { grid-template-columns: 2fr 1fr; }
+  .arg-section.reverse .arg-sidebar { order: 2; }
+  .arg-section.reverse .arg-body { order: 1; }
+  .arg-sidebar { position: sticky; top: 5rem; }
+  .arg-number { font-family: var(--serif); font-size: 6rem; font-weight: 900; color: var(--mist); line-height: 1; margin-bottom: 1rem; }
+  .arg-title { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; line-height: 1.3; color: var(--ink); margin-bottom: 1rem; }
+  .arg-accent-bar { width: 2.5rem; height: 3px; background: var(--accent); margin-top: 1rem; }
+  .arg-body p { font-size: 1rem; line-height: 1.85; color: rgba(26,26,26,0.8); margin-bottom: 1.5rem; }
+  .arg-body p:last-child { margin-bottom: 0; }
+
+  .pullquote-section { padding: 6rem 5rem; display: flex; justify-content: center; align-items: center; background: var(--mist); }
+  .pullquote { max-width: 700px; text-align: center; position: relative; padding: 3rem; }
+  .pullquote::before { content: '\201C'; font-family: var(--serif); font-size: 10rem; font-weight: 900; color: rgba(200,71,42,0.12); position: absolute; top: -2rem; left: 0; line-height: 1; pointer-events: none; }
+  .pullquote blockquote { font-family: var(--serif); font-size: clamp(1.3rem,2.5vw,1.9rem); font-weight: 700; line-height: 1.4; color: var(--ink); font-style: italic; margin-bottom: 1.5rem; position: relative; z-index: 1; }
+  .pullquote cite { font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); font-style: normal; font-weight: 500; }
+
+  .conclusion-section { padding: 7rem 5rem; max-width: 800px; margin: 0 auto; }
+  .conclusion-section h2 { font-family: var(--serif); font-size: clamp(1.8rem,3vw,2.8rem); font-weight: 900; color: var(--ink); margin-bottom: 2rem; }
+  .conclusion-section p { font-size: 1.05rem; line-height: 1.85; color: rgba(26,26,26,0.8); margin-bottom: 1.5rem; }
+  .section-number { display: inline-block; font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin-bottom: 1rem; border: 1px solid var(--accent); padding: 0.3rem 0.8rem; border-radius: 2rem; }
+
+  .works-cited { background: var(--ink); padding: 5rem; }
+  .works-cited h2 { font-family: var(--serif); font-size: clamp(1.8rem,3vw,2.8rem); font-weight: 900; color: white; margin-bottom: 2.5rem; }
+  .cite-list { list-style: none; max-width: 860px; }
+  .cite-list li { font-size: 0.85rem; color: rgba(255,255,255,0.55); line-height: 1.8; padding: 1.25rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); padding-left: 1.5rem; text-indent: -1.5rem; }
+  .cite-list li:last-child { border-bottom: none; }
+  .cite-list a { color: rgba(125,184,214,0.8); text-decoration: none; word-break: break-all; }
+  .cite-list a:hover { color: #7db8d6; }
+
+  footer { padding: 2rem 5rem; border-top: 1px solid var(--mist); display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: rgba(26,26,26,0.4); }
+
+  .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .fade-in.visible { opacity: 1; transform: none; }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; } .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; min-height: auto; }
+    .hero-left { padding: 4rem 1.5rem 3rem; } .hero-right { padding: 3rem 1.5rem 4rem; } .hero-left::after { display: none; }
+    .arg-section, .arg-section.reverse { grid-template-columns: 1fr; padding: 4rem 1.5rem; gap: 2rem; }
+    .arg-section.reverse .arg-sidebar { order: 1; } .arg-section.reverse .arg-body { order: 2; }
+    .arg-sidebar { position: static; }
+    .compare-section, .stats-section, .pullquote-section, .conclusion-section, .works-cited { padding: 4rem 1.5rem; }
+    .compare-grid { grid-template-columns: 1fr; } .compare-divider { display: none; }
+    .stats-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 0.5rem; text-align: center; padding: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">AI in Schools</a>
+  <ul class="nav-links">
+    <li><a href="#argument-1">Workplace</a></li>
+    <li><a href="#argument-2">Writing</a></li>
+    <li><a href="#argument-3">Policy</a></li>
+    <li><a href="#conclusion">Conclusion</a></li>
+    <li><a href="#works-cited">Sources</a></li>
+  </ul>
+  <a class="nav-download" href="AI_In_Schools_Essay.docx" download="AI_In_Schools_Essay_Taylor_Houghtaling.docx">↓ Essay</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-tag">Multimodal Composition · Project 4</div>
+    <h1 class="hero-question">Should <em>AI</em> be allowed in schools?</h1>
+    <p class="hero-sub">An exploration of AI as a taught literacy skill — and why the answer isn't as simple as yes or no.</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><span class="hero-meta-label">Author</span><span class="hero-meta-value"><a href="https://taylors-portfolio-nu.vercel.app" target="_blank" style="color:rgba(255,255,255,0.7);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.25);transition:color 0.2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">Taylor Houghtaling</a></span></div>
+      <div class="hero-meta-item"><span class="hero-meta-label">Course</span><span class="hero-meta-value">College Writing</span></div>
+      <div class="hero-meta-item"><span class="hero-meta-label">Term</span><span class="hero-meta-value">Spring 2026</span></div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="thesis-label">Thesis</div>
+    <p class="thesis-text">AI should not just be permitted in schools — it should be <strong>taught as a literacy skill</strong>, particularly for writing, because learning to work with AI effectively <strong>prepares students for the real world</strong> while strengthening their thinking, not replacing it.</p>
+  </div>
+  <div class="scroll-hint">Scroll</div>
+</div>
+
+<section class="compare-section">
+  <h2>Ban it or <em>teach it?</em></h2>
+  <p class="lead">Two approaches. Very different outcomes.</p>
+  <div class="compare-grid">
+    <div class="compare-col ban">
+      <div class="compare-col-label"><span class="icon">✕</span> Ban AI</div>
+      <div class="compare-item"><span class="icon">—</span><span>Students use it anyway, but secretly</span></div>
+      <div class="compare-item"><span class="icon">—</span><span>AI detectors falsely flag real student writing — especially English learners</span></div>
+      <div class="compare-item"><span class="icon">—</span><span>Graduates enter workforce without AI skills</span></div>
+      <div class="compare-item"><span class="icon">—</span><span>Creates adversarial classroom environment</span></div>
+      <div class="compare-item"><span class="icon">—</span><span>Misses opportunity to teach critical evaluation</span></div>
+    </div>
+    <div class="compare-divider">vs</div>
+    <div class="compare-col teach">
+      <div class="compare-col-label"><span class="icon">✓</span> Teach AI</div>
+      <div class="compare-item"><span class="icon">+</span><span>Students learn responsible, critical AI use</span></div>
+      <div class="compare-item"><span class="icon">+</span><span>Builds writing scaffold for struggling learners</span></div>
+      <div class="compare-item"><span class="icon">+</span><span>Prepares graduates for modern workplace reality</span></div>
+      <div class="compare-item"><span class="icon">+</span><span>Democratizes access to writing support</span></div>
+      <div class="compare-item"><span class="icon">+</span><span>Teaches AI's limitations as critical thinking</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="stats-section">
+  <h2>The Numbers</h2>
+  <div class="stats-grid">
+    <div class="stat-card fade-in">
+      <div class="stat-number">⅓</div>
+      <div class="stat-label">of all organizations are already regularly using generative AI in at least one business function</div>
+      <div class="stat-source">McKinsey Global Survey on AI, 2023 (n=1,684)</div>
+    </div>
+    <div class="stat-card fade-in">
+      <div class="stat-number">50%+</div>
+      <div class="stat-label">of TOEFL essays written by non-native English speakers were incorrectly flagged as AI-generated by detection tools</div>
+      <div class="stat-source">Stanford University study, via Education Week, 2023</div>
+    </div>
+    <div class="stat-card fade-in">
+      <div class="stat-number">40%</div>
+      <div class="stat-label">of organizations with AI adoption plan to increase their AI investment further because of generative AI</div>
+      <div class="stat-source">McKinsey Global Survey on AI, 2023</div>
+    </div>
+  </div>
+</section>
+
+<section id="argument-1">
+  <div class="arg-section fade-in">
+    <div class="arg-sidebar">
+      <div class="arg-number">01</div>
+      <div class="arg-title">The workplace already uses AI. Schools should catch up.</div>
+      <div class="arg-accent-bar"></div>
+    </div>
+    <div class="arg-body">
+      <p>One of the clearest arguments for teaching AI in schools is simply that the professional world has already adopted it. According to McKinsey & Company's 2023 State of AI survey of 1,684 participants, one-third of all organizations are already regularly using generative AI in at least one business function — and 40 percent of those organizations plan to increase their AI investment further because of it.</p>
+      <p>Students who graduate without experience using AI tools are entering a job market where AI literacy is increasingly expected, not optional. Writing, in particular, is one of the domains most transformed — marketers, developers, lawyers, and engineers are all using AI to draft, refine, and structure written work. Teaching students to do this well — critically, responsibly, with verification — is as practical as teaching them to use spreadsheets or presentation software.</p>
+      <p>The argument that AI "does the work for students" misunderstands what professional AI use actually looks like. A professional does not simply paste a prompt and submit the output. They evaluate it, edit it, fact-check it, and revise it to match their voice and their audience. Teaching students to do exactly that is teaching writing — just at a higher, more iterative level.</p>
+    </div>
+  </div>
+</section>
+
+<div class="pullquote-section">
+  <div class="pullquote">
+    <blockquote>"The question is not whether AI should exist in schools — it already does. The real question is whether schools will be part of teaching students to use it well."</blockquote>
+    <cite>Central Argument</cite>
+  </div>
+</div>
+
+<section id="argument-2">
+  <div class="arg-section reverse fade-in">
+    <div class="arg-body">
+      <p>A common fear is that using AI to help write essays will make students worse writers. Research suggests the opposite when AI is used as a process tool rather than a product generator. In their 2023 SSRN paper, Ethan Mollick and Lilach Mollick of the Wharton School propose frameworks for AI as a tutor, coach, and feedback tool — all roles that scaffold student thinking rather than replace it.</p>
+      <p>Students who use AI as a drafting scaffold — generating outlines, getting feedback on organization, or exploring multiple phrasings — can direct more cognitive energy toward argumentation and clarity, consistent with decades of research on scaffolded writing instruction. Think of it this way: a student who struggles with blank-page anxiety can use AI to generate a rough first paragraph, then immediately recognize what's wrong with it, revise it, and understand why their version is better. That is active learning.</p>
+      <p>There is also a significant equity argument. Not every student has a parent who is a skilled writer, access to private tutors, or the confidence to visit office hours. AI writing tools democratize access to feedback that was previously only available to students with those resources. A first-generation college student who has never been taught how to structure a thesis argument can use AI as a patient, available, always-on guide — not to cheat, but to learn.</p>
+    </div>
+    <div class="arg-sidebar">
+      <div class="arg-number">02</div>
+      <div class="arg-title">AI builds writing skills — it doesn't replace them.</div>
+      <div class="arg-accent-bar"></div>
+    </div>
+  </div>
+</section>
+
+<section id="argument-3" style="background: var(--mist);">
+  <div class="arg-section fade-in">
+    <div class="arg-sidebar">
+      <div class="arg-number">03</div>
+      <div class="arg-title">Banning AI doesn't stop it. Teaching it shapes it.</div>
+      <div class="arg-accent-bar"></div>
+    </div>
+    <div class="arg-body">
+      <p>Some schools have responded to the rise of AI by banning its use and deploying AI-detection software. This approach has serious problems. Research covered in Education Week found that AI detection tools carry high false-positive rates — a Stanford University study found that over half of TOEFL essays written by non-native speakers were incorrectly flagged as AI-generated, while native-speaker essays passed (Najarro, 2023). A false accusation of cheating can have lasting consequences on a student's academic record and their relationship with school.</p>
+      <p>As New York Times technology columnist Kevin Roose argued in January 2023, banning ChatGPT simply will not work: students have phones, personal laptops, and VPNs — access to AI tools regardless of school network policy. The more effective approach is AI-integrated pedagogy: explicitly teaching students when, how, and why to use AI tools, and designing assignments that require demonstrated human thought even when AI assistance is permitted.</p>
+      <p>Teaching AI literacy also opens up conversations about its limitations — hallucinated facts, biased outputs, stylistic flatness — which are critical thinking exercises in their own right. A student who learns to critically evaluate an AI-generated paragraph is practicing exactly the kind of source skepticism that English and research classes have always aimed to build.</p>
+    </div>
+  </div>
+</section>
+
+<section id="conclusion" class="conclusion-section fade-in">
+  <div class="section-number">Conclusion</div>
+  <h2>The question is already being answered.</h2>
+  <p>The question "should AI be allowed in schools?" is already being answered by students themselves, every day. The better question — the more honest one — is whether schools will be part of teaching students to use it well.</p>
+  <p>AI writing tools, used thoughtfully and taught explicitly, are not a threat to education. They are an extension of the same impulse that gave us dictionaries, grammar guides, peer review, and writing centers: the recognition that good writing is a craft that benefits from tools, feedback, and iteration.</p>
+  <p>Schools that teach students to navigate AI critically and ethically are not lowering standards. They are raising them to meet the world their students are actually entering.</p>
+</section>
+
+<section id="works-cited" class="works-cited">
+  <h2>Works Cited</h2>
+  <ul class="cite-list">
+    <li>Mollick, Ethan R., and Lilach Mollick. "Assigning AI: Seven Approaches for Students, with Prompts." <em>SSRN</em>, 23 Sept. 2023. <a href="https://doi.org/10.2139/ssrn.4475995" target="_blank">https://doi.org/10.2139/ssrn.4475995</a>.</li>
+    <li>McKinsey & Company. "The State of AI in 2023: Generative AI's Breakout Year." <em>McKinsey Global Institute</em>, 2023. <a href="https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai-in-2023-generative-ais-breakout-year" target="_blank">mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai-in-2023-generative-ais-breakout-year</a>.</li>
+    <li>Miao, Fengchun, and Wayne Holmes. "Guidance for Generative AI in Education and Research." <em>UNESCO</em>, 7 Sept. 2023. <a href="https://www.unesco.org/en/articles/guidance-generative-ai-education-and-research" target="_blank">unesco.org/en/articles/guidance-generative-ai-education-and-research</a>.</li>
+    <li>Najarro, Ileana. "Another AI Issue for Schools to Know About: Bias Against Non-Native English Speakers." <em>Education Week</em>, 23 Aug. 2023. <a href="https://www.edweek.org/technology/another-ai-issue-for-schools-to-know-about-bias-against-non-native-english-speakers/2023/08" target="_blank">edweek.org/technology/another-ai-issue-for-schools-to-know-about-bias-against-non-native-english-speakers/2023/08</a>.</li>
+    <li>Roose, Kevin. "Don't Ban ChatGPT in Schools. Teach With It." <em>The New York Times</em>, 12 Jan. 2023. <a href="https://www.nytimes.com/2023/01/12/technology/chatgpt-schools-teachers.html" target="_blank">nytimes.com/2023/01/12/technology/chatgpt-schools-teachers.html</a>.</li>
+  </ul>
+</section>
+
+<footer>
+  <span>Should AI Be Allowed in Schools? — Taylor Houghtaling · College Writing · Spring 2026</span>
+  <span style="display:flex;gap:1.5rem;align-items:center;">
+    <a href="https://taylors-portfolio-nu.vercel.app" target="_blank" style="color:rgba(26,26,26,0.5);text-decoration:none;border-bottom:1px solid rgba(26,26,26,0.2);font-size:0.75rem;transition:color 0.2s" onmouseover="this.style.color='#1a1a1a'" onmouseout="this.style.color='rgba(26,26,26,0.5)'">Portfolio ↗</a>
+    <a href="AI_In_Schools_Essay.docx" download="AI_In_Schools_Essay_Taylor_Houghtaling.docx" style="color:rgba(26,26,26,0.5);text-decoration:none;border-bottom:1px solid rgba(26,26,26,0.2);font-size:0.75rem;transition:color 0.2s" onmouseover="this.style.color='#1a1a1a'" onmouseout="this.style.color='rgba(26,26,26,0.5)'">↓ Essay (.docx)</a>
+  </span>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
