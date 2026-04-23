@@ -194,6 +194,27 @@ export const ContactSection = () => {
             </div>
           </motion.div>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, delay: 0.5 }}
+          className="mt-8 md:mt-12 rounded-2xl border p-5 md:p-6 flex flex-col sm:flex-row sm:items-center gap-4"
+          style={{ borderColor: "rgba(255,255,255,0.06)", backgroundColor: "rgba(255,255,255,0.02)" }}
+        >
+          <div className="flex-1">
+            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-1" style={{ fontFamily: "var(--font-sub)" }}>Featured Writing</p>
+            <p className="text-sm font-medium" style={{ color: isLight ? "var(--navy)" : "rgba(255,255,255,0.85)" }}>Should AI Be Allowed in Schools?</p>
+            <p className="text-xs text-neutral-500 mt-0.5">My take on AI in the classroom — the case for teaching it, not banning it.</p>
+          </div>
+          <a
+            href="/should-ai-be-allowed-in-schools.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 inline-flex items-center gap-2 rounded-full border px-5 py-2 text-xs font-semibold transition-all hover:scale-[1.04] active:scale-[0.97]"
+            style={{ borderColor: "var(--navy-border)", backgroundColor: "var(--navy-fill-sm)", color: "var(--navy)" }}
+          >
+            Read Essay →
+          </a>
+        </motion.div>
       </div>
 
       <div className="relative z-10 mt-8 md:mt-24 border-t pt-6 md:pt-8 text-center" style={{ borderColor: footerBorder }}>
