@@ -219,23 +219,25 @@ export const ReflectionHeader = () => {
   );
 };
 
-const THERMAL_BANDS = [
-  ["#7f1d1d", "#dc2626"],
-  ["#9a3412", "#f97316"],
-  ["#4a1d96", "#9333ea"],
-  ["#1e3a8a", "#3b82f6"],
-  ["#0c2a3a", "#0ea5e9"],
+// Each band: [infrared color, normal/grayscale color]
+// Gradient runs top (cold/dark) → bottom (hot/bright), matching FLIR iron palette
+const THERMAL_BANDS: [string, string][] = [
+  ["#150a3e", "#111111"],
+  ["#8b1a8b", "#3a3a3a"],
+  ["#c0392b", "#777777"],
+  ["#e07020", "#b0b0b0"],
+  ["#f5c200", "#eeeeee"],
 ];
 
 export const HeatTransferHeader = () => (
   <div className="relative flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#0a0a0a]">
-    {THERMAL_BANDS.map(([from, to], i) => (
+    {THERMAL_BANDS.map(([ir, normal], i) => (
       <motion.div
         key={i}
         className="flex-1"
-        style={{ backgroundColor: from }}
-        animate={{ backgroundColor: to }}
-        transition={{ duration: 2.2, delay: i * 0.18, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+        style={{ backgroundColor: ir }}
+        animate={{ backgroundColor: [ir, normal, ir] }}
+        transition={{ duration: 4, delay: i * 0.08, repeat: Infinity, ease: "easeInOut" }}
       />
     ))}
     <div className="pointer-events-none absolute inset-0 flex items-end justify-start p-3">
