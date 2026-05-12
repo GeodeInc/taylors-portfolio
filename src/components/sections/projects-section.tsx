@@ -2,7 +2,7 @@
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
-import { IconBrandGithub, IconBuildingStore, IconBrain, IconCube, IconX, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { IconBrandGithub, IconBuildingStore, IconBrain, IconCube, IconX, IconChevronLeft, IconChevronRight, IconFlame } from "@tabler/icons-react";
 import { Magnetic } from "@/components/ui/magnetic";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 import { useTheme } from "@/contexts/theme-context";
@@ -219,6 +219,171 @@ export const ReflectionHeader = () => {
   );
 };
 
+export const HeatTransferHeader = () => {
+  const W = 260; const H = 128;
+
+  // Profile segments from cold (bottom/right) to hot (top/right) — 4 connected lines
+  // Each segment oscillates slightly between state A and state B for a "live measurement" feel
+  const segs = [
+    { ax1:186,ay1:100, ax2:198,ay2:79, bx1:184,by1:100, bx2:196,by2:79 },
+    { ax1:198,ay1:79,  ax2:224,ay2:52, bx1:196,by1:79,  bx2:220,by2:52 },
+    { ax1:224,ay1:52,  ax2:244,ay2:29, bx1:220,by1:52,  bx2:240,by2:29 },
+    { ax1:244,ay1:29,  ax2:250,ay2:17, bx1:240,by1:29,  bx2:246,by2:17 },
+  ];
+  const segColors = ["#0ea5e9", "#818cf8", "#fb923c", "#f97316"];
+
+  return (
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-[#080d14]">
+      {/* Dot grid — same texture as other headers */}
+      <svg className="absolute inset-0 h-full w-full opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="ht-dots" x="0" y="0" width="12" height="12" patternUnits="userSpaceOnUse">
+            <circle cx="1.5" cy="1.5" r="1" fill="#7a9ab5"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#ht-dots)"/>
+      </svg>
+
+      <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="absolute inset-0 z-10">
+        <defs>
+          {/* Hot → cold vertical gradient for thermal overlay on stack */}
+          <linearGradient id="ht-stack-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#f97316" stopOpacity="0.32"/>
+            <stop offset="100%" stopColor="#0ea5e9"  stopOpacity="0.18"/>
+          </linearGradient>
+          {/* Thermal false-colour for camera preview */}
+          <linearGradient id="ht-cam-img" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#f97316"/>
+            <stop offset="28%"  stopColor="#9333ea"/>
+            <stop offset="65%"  stopColor="#1d4ed8"/>
+            <stop offset="100%" stopColor="#0f172a"/>
+          </linearGradient>
+        </defs>
+
+        {/* ── FLIR camera body (left) ──────────────────────────────────── */}
+        <rect x="8" y="18" width="54" height="92" rx="5"
+          fill="#0c1824" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8"/>
+        {/* Lens rings */}
+        <circle cx="35" cy="47" r="18" fill="#060f1c" stroke="rgba(255,255,255,0.09)" strokeWidth="0.9"/>
+        <circle cx="35" cy="47" r="12" fill="#0a1828"/>
+        <circle cx="35" cy="47" r="7"  fill="#122030"/>
+        {/* Lens glint */}
+        <circle cx="30" cy="42" r="2" fill="rgba(255,255,255,0.06)"/>
+        {/* Thermal preview screen (bottom of body) */}
+        <rect x="12" y="72" width="46" height="32" rx="2" fill="url(#ht-cam-img)" opacity="0.9"/>
+        {/* Animated scan line */}
+        <motion.rect
+          x={12} width={46} height={1.5} rx={0.75}
+          fill="rgba(255,255,255,0.22)"
+          initial={{ y: 72 }}
+          animate={{ y: [72, 102, 72] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: "linear" }}
+        />
+        {/* REC indicator */}
+        <motion.circle cx={52} cy={24} r={2.5} fill="#ef4444"
+          animate={{ opacity: [1, 0.15, 1] }}
+          transition={{ duration: 1.1, repeat: Infinity }}/>
+        <text x="20" y="112" fill="rgba(255,255,255,0.2)" fontSize={6.5}
+          fontFamily="monospace" letterSpacing="1">FLIR</text>
+
+        {/* Arrow from camera to stack */}
+        <line x1="62" y1="64" x2="86" y2="64"
+          stroke="rgba(255,255,255,0.07)" strokeWidth="0.8" strokeDasharray="2 2"/>
+        <polygon points="86,61 90,64 86,67" fill="rgba(255,255,255,0.08)"/>
+
+        {/* ── Material stack (centre) ─────────────────────────────────── */}
+        {/* Aluminum (top) — metallic horizontal lines */}
+        <rect x="90" y="14" width="72" height="30"
+          fill="#1b2b3c" stroke="rgba(176,190,197,0.12)" strokeWidth="0.5"/>
+        {[18,22,26,30,36].map(y => (
+          <line key={`al-${y}`} x1="92" y1={y} x2="160" y2={y}
+            stroke="rgba(176,190,197,0.05)" strokeWidth="0.6"/>
+        ))}
+        <text x="126" y="32" fill="rgba(176,190,197,0.65)" fontSize={8}
+          fontFamily="monospace" textAnchor="middle">Al</text>
+
+        {/* Acrylic (middle) — translucent blue tint */}
+        <rect x="90" y="44" width="72" height="30"
+          fill="#0b1c2e" stroke="rgba(99,179,237,0.12)" strokeWidth="0.5"/>
+        <text x="126" y="62" fill="rgba(99,179,237,0.55)" fontSize={8}
+          fontFamily="monospace" textAnchor="middle">acrylic</text>
+
+        {/* Pine (bottom) — warm wood grain lines */}
+        <rect x="90" y="74" width="72" height="40"
+          fill="#1a1108" stroke="rgba(180,140,80,0.12)" strokeWidth="0.5"/>
+        {[80,87,94,101,108].map(y => (
+          <line key={`pine-${y}`} x1="92" y1={y} x2="160" y2={y}
+            stroke="rgba(180,140,80,0.04)" strokeWidth="1.2"/>
+        ))}
+        <text x="126" y="98" fill="rgba(180,140,80,0.55)" fontSize={8}
+          fontFamily="monospace" textAnchor="middle">pine</text>
+
+        {/* Stack border + thermal gradient overlay */}
+        <rect x="90" y="14" width="72" height="100" rx="2"
+          fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.8"/>
+        <rect x="90" y="14" width="72" height="100" rx="2"
+          fill="url(#ht-stack-grad)"/>
+
+        {/* Interface tick marks (left side) */}
+        <line x1="86" y1="44"  x2="90" y2="44"  stroke="rgba(249,115,22,0.50)" strokeWidth="1"/>
+        <line x1="86" y1="74"  x2="90" y2="74"  stroke="rgba(251,191,36,0.40)" strokeWidth="1"/>
+        <line x1="86" y1="114" x2="90" y2="114" stroke="rgba(14,165,233,0.50)" strokeWidth="1"/>
+
+        {/* T₁ / T₂ labels */}
+        <text x="84" y="19"  fill="rgba(249,115,22,0.80)" fontSize={6.5} fontFamily="monospace" textAnchor="end">T₁</text>
+        <text x="84" y="117" fill="rgba(14,165,233,0.80)" fontSize={6.5} fontFamily="monospace" textAnchor="end">T₂</text>
+
+        {/* Animated heat-flow particles (descend hot→cold, staggered) */}
+        {[0,1,2,3].map((i) => (
+          <motion.circle key={i} cx={126} r={2.5}
+            fill={i < 2 ? "#f97316" : "#0ea5e9"}
+            initial={{ cy: 14, opacity: 0 }}
+            animate={{ cy: [14, 114], opacity: [0, 0.9, 0.9, 0] }}
+            transition={{
+              duration: 1.9,
+              repeat: Infinity,
+              delay: i * 0.48,
+              ease: "linear",
+              times: [0, 0.1, 0.88, 1],
+            }}
+          />
+        ))}
+
+        {/* ── Temperature profile mini-chart (right) ───────────────────── */}
+        {/* Axes */}
+        <line x1="174" y1="14"  x2="174" y2="114" stroke="rgba(255,255,255,0.10)" strokeWidth="0.7"/>
+        <line x1="174" y1="114" x2="252" y2="114" stroke="rgba(255,255,255,0.10)" strokeWidth="0.7"/>
+        <text x="213" y="124" fill="rgba(255,255,255,0.20)" fontSize={6}
+          fontFamily="monospace" textAnchor="middle">T(x)</text>
+
+        {/* Profile lines — oscillate between two measured states */}
+        {segs.map((s, i) => (
+          <motion.line key={i}
+            x1={s.ax1} y1={s.ay1} x2={s.ax2} y2={s.ay2}
+            stroke={segColors[i]} strokeWidth={1.5} strokeLinecap="round"
+            animate={{
+              x1: [s.ax1, s.bx1, s.ax1],
+              y1: [s.ay1, s.by1, s.ay1],
+              x2: [s.ax2, s.bx2, s.ax2],
+              y2: [s.ay2, s.by2, s.ay2],
+            }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+        ))}
+
+        {/* Boundary dots on profile */}
+        <circle cx={250} cy={17}  r={3} fill="#f97316" opacity={0.85}/>
+        <circle cx={186} cy={100} r={3} fill="#0ea5e9"  opacity={0.85}/>
+
+        {/* Footer label */}
+        <text x="4" y={H - 4} fill="rgba(255,255,255,0.16)" fontSize={7} fontFamily="monospace">
+          thermal · 1-D conduction
+        </text>
+      </svg>
+    </div>
+  );
+};
+
 const projects = [
   {
     title: "Tenzorllc.com",
@@ -268,13 +433,14 @@ const projects = [
     link: "https://geodeinc.github.io/colorgenerator",
   },
   {
-    title: "Point Reflection Calculator",
-    description: "A dynamic web-based calculator that reflects a point across a given line. Users input a line’s slope and y-intercept, along with a point’s coordinates. The calculator computes the perpendicular line, midpoint, and reflected point, then visualizes all elements interactively using a Desmos graph. The tool demonstrates real-time calculations, responsive UI, and mathematical visualization, ideal for geometry learning or interactive demonstrations.",
-    icon: <IconCube size={20} />,
-    tags: ["JavaScript","HTML","CSS","Desmos API","2022"],
+    title: "Heat Transfer Dashboard",
+    description: "A full-stack thermal analysis tool that processes FLIR infrared images entirely in the browser — no server required. Upload a thermal image, build a material stack (hotplate → air), and the app extracts a per-row temperature profile via the Canvas API, then runs a 1-D steady-state Fourier conduction model across every layer.\n\nKey engineering features: per-layer thermal resistance, uncertainty propagation (1σ) from the steady-state index, Stefan-Boltzmann emissivity correction, multi-frame averaging with per-row standard deviation for uncertainty bands, temperature-dependent k(T) correction, contact resistance detection, and a lateral heat-loss warning. Run history is persisted to localStorage and any two runs can be selected for side-by-side comparison with overlaid temperature profiles. Exports full results to CSV and PDF (with chart capture via html2canvas + jsPDF).\n\nAlgorithm ported from custom MATLAB scripts (HeatGraph.m + QCalcAndError.m) built for a university heat-transfer lab.",
+    icon: <IconFlame size={20} />,
+    tags: ["Next.js 14","TypeScript","Canvas API","Recharts","jsPDF","Physics","2025"],
     className: "col-span-1",
-    header: <ReflectionHeader />,
-    link: "https://geodeinc.github.io/reflectioncalculator",
+    badge: "Research",
+    header: <HeatTransferHeader />,
+    link: "https://github.com/GeodeInc",
   },
 ];
 
