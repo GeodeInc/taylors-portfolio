@@ -219,27 +219,21 @@ export const ReflectionHeader = () => {
   );
 };
 
-// Each band: [infrared color, normal/grayscale color]
-// Gradient runs top (cold/dark) → bottom (hot/bright), matching FLIR iron palette
-const THERMAL_BANDS: [string, string][] = [
-  ["#150a3e", "#111111"],
-  ["#8b1a8b", "#3a3a3a"],
-  ["#c0392b", "#777777"],
-  ["#e07020", "#b0b0b0"],
-  ["#f5c200", "#eeeeee"],
-];
-
 export const HeatTransferHeader = () => (
-  <div className="relative flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#0a0a0a]">
-    {THERMAL_BANDS.map(([ir, normal], i) => (
-      <motion.div
-        key={i}
-        className="flex-1"
-        style={{ backgroundColor: ir }}
-        animate={{ backgroundColor: [ir, normal, ir] }}
-        transition={{ duration: 4, delay: i * 0.08, repeat: Infinity, ease: "easeInOut" }}
-      />
-    ))}
+  <div className="relative flex h-full w-full overflow-hidden rounded-xl">
+    {/* Infrared base — FLIR iron palette, cold (top) → hot (bottom) */}
+    <div className="absolute inset-0" style={{
+      background: "linear-gradient(to bottom, #150a3e, #8b1a8b, #c0392b, #e07020, #f5c200)"
+    }} />
+    {/* Normal layer — real material colors: dark ambient → steel → aluminum → brass → copper */}
+    <motion.div
+      className="absolute inset-0"
+      style={{
+        background: "linear-gradient(to bottom, #1c1c1e, #3a3a3f, #71797e, #a88050, #b86030)"
+      }}
+      animate={{ opacity: [0, 1, 0] }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+    />
     <div className="pointer-events-none absolute inset-0 flex items-end justify-start p-3">
       <span className="rounded-md bg-black/50 px-2 py-0.5 text-[10px] font-mono text-white/60 backdrop-blur-sm">
         230°F → 59°F
