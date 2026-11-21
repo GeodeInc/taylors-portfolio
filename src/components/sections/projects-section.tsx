@@ -238,7 +238,7 @@ const projects = [
     className: "col-span-1",
     badge: "Research",
     header: <HeatTransferHeader />,
-    link: "https://github.com/GeodeInc",
+    link: "/heat-transfer/",
   },
 ];
 
