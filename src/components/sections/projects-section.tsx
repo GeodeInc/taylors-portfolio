@@ -159,66 +159,6 @@ export const ColorPaletteHeader = () => (
   </div>
 );
 
-export const ReflectionHeader = () => {
-  const W = 260; const H = 128;
-  // axis goes from bottom-left to top-right
-  const ax1 = { x: 20, y: H - 16 }; const ax2 = { x: W - 20, y: 16 };
-  // point A animates along a small arc on the left side
-  const aPath = { x: [55, 70, 55], y: [40, 58, 40] };
-  // reflected point B mirrors A across the axis (approximate symmetric path)
-  const bPath = { x: [180, 165, 180], y: [88, 70, 88] };
-
-  return (
-    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-[#080d14]">
-      {/* subtle grid */}
-      <svg className="absolute inset-0 h-full w-full opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#4a6080" strokeWidth="0.5"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid)"/>
-      </svg>
-
-      {/* SVG fills the full container width, viewBox keeps coordinate space */}
-      <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="absolute inset-0 z-10">
-        {/* Axis of reflection */}
-        <line x1={ax1.x} y1={ax1.y} x2={ax2.x} y2={ax2.y}
-          stroke="rgba(168,181,140,0.5)" strokeWidth="1" strokeDasharray="4 3"/>
-
-        {/* Dashed connector between A and B */}
-        <motion.line
-          x1={aPath.x[0]} y1={aPath.y[0]}
-          animate={{ x1: aPath.x, y1: aPath.y, x2: bPath.x, y2: bPath.y }}
-          transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-          x2={bPath.x[0]} y2={bPath.y[0]}
-          stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3 3"/>
-
-        {/* Axis label */}
-        <text x={ax2.x - 16} y={ax2.y - 6} fill="rgba(168,181,140,0.5)" fontSize="8" fontFamily="monospace">y=x</text>
-
-        {/* Point A — group moves as a unit so the label stays glued to the dot */}
-        <motion.g
-          animate={{ x: aPath.x, y: aPath.y }}
-          initial={{ x: aPath.x[0], y: aPath.y[0] }}
-          transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}>
-          <circle cx={0} cy={0} r={5} fill="#4a6080" stroke="rgba(74,96,128,0.6)" strokeWidth="6"/>
-          <text x={9} y={1} fill="rgba(255,255,255,0.7)" fontSize="9" fontFamily="monospace" dominantBaseline="middle">A</text>
-        </motion.g>
-
-        {/* Point A' — label to the left so it never clips off the right edge */}
-        <motion.g
-          animate={{ x: bPath.x, y: bPath.y }}
-          initial={{ x: bPath.x[0], y: bPath.y[0] }}
-          transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}>
-          <circle cx={0} cy={0} r={5} fill="#364d63" stroke="rgba(54,77,99,0.6)" strokeWidth="6"/>
-          <text x={-22} y={1} fill="rgba(255,255,255,0.7)" fontSize="9" fontFamily="monospace" dominantBaseline="middle">A&apos;</text>
-        </motion.g>
-      </svg>
-    </div>
-  );
-};
-
 export const HeatTransferHeader = () => (
   <div className="relative flex h-full w-full overflow-hidden rounded-xl">
     {/* Infrared base — FLIR iron palette, cold (top) → hot (bottom) */}

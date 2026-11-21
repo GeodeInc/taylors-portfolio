@@ -100,7 +100,7 @@ const PROJECT_PREVIEWS = [
   "/preview/tenzor",
   "/preview/pos",
   "/preview/color",
-  "/preview/reflection",
+  "/preview/heat",
 ];
 
 
@@ -181,7 +181,8 @@ function NavTransitionOverlay() {
         window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
         !window.matchMedia("(hover: hover) and (pointer: fine)").matches;
       if (noAnim) {
-        window.dispatchEvent(new Event("nav-transition-done"));
+        // Async so every nav-transition listener runs before done fires (avoids lock/unlock ordering bugs)
+        setTimeout(() => window.dispatchEvent(new Event("nav-transition-done")), 0);
         return;
       }
 
@@ -491,6 +492,11 @@ function ScatteredNav() {
   const useOverlayForProjectsRef = useRef(false);
   const scrollingRef = useRef(false);
   const wheelAccum = useRef(0);
+  const navLockRef = useRef(false);
+  const lastWheelRef = useRef(0);
+  const gestureConsumedRef = useRef(false);
+  const sectionIdxRef = useRef(0);
+  const wheelStepRef = useRef<((deltaY: number) => boolean) | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -506,33 +512,103 @@ function ScatteredNav() {
     return () => window.removeEventListener("nav-transition-done", handler);
   }, []);
 
-  // Wheel handler — accumulates trackpad deltas, advances sections on threshold
+  // Lock section-stepping while a scripted transition (spill / nav overlay) is running,
+  // so wheel input can't fight the programmatic scroll or move the page behind the overlay.
+  useEffect(() => {
+    let safety: ReturnType<typeof setTimeout>;
+    const unlock = () => {
+      clearTimeout(safety);
+      navLockRef.current = false;
+      wheelAccum.current = 0;
+      lastWheelRef.current = performance.now();
+    };
+    // Safety cap: never leave scrolling frozen if a "done" event is missed
+    const lock = () => {
+      navLockRef.current = true;
+      wheelAccum.current = 0;
+      clearTimeout(safety);
+      safety = setTimeout(unlock, 8000); // longest overlay (4-step jump) runs ~5–6s
+    };
+    window.addEventListener("nav-transition", lock);
+    window.addEventListener("nav-transition-done", unlock);
+    window.addEventListener("projects-spill-hide", lock);
+    window.addEventListener("projects-spill-done", unlock);
+    return () => {
+      window.removeEventListener("nav-transition", lock);
+      window.removeEventListener("nav-transition-done", unlock);
+      window.removeEventListener("projects-spill-hide", lock);
+      window.removeEventListener("projects-spill-done", unlock);
+      clearTimeout(safety);
+    };
+  }, []);
+
+  // Wheel handler — accumulates trackpad deltas, advances one section per gesture
   useEffect(() => {
     if (!mounted) return;
     const scrollEl = document.querySelector("main") as HTMLElement | null;
     if (!scrollEl) return;
     let resetTimer: ReturnType<typeof setTimeout>;
+    let rafId = 0;
 
-    const onWheel = (e: WheelEvent) => {
-      if (window.innerWidth < 768) return; // natural scroll on mobile
-      e.preventDefault();
-      if (scrollingRef.current) return;
-      wheelAccum.current += e.deltaY;
+    const step = (deltaY: number) => {
+      if (window.innerWidth < 768) return false; // natural scroll on mobile
+      const now = performance.now();
+      const sinceLast = now - lastWheelRef.current;
+      lastWheelRef.current = now;
+      // While locked, swallow input (including trackpad inertia) without accumulating
+      if (navLockRef.current || scrollingRef.current) { wheelAccum.current = 0; return true; }
+      // Ignore the tail of the gesture that triggered the last step: require a short pause first
+      if (sinceLast < 150 && gestureConsumedRef.current) return true;
+      gestureConsumedRef.current = false;
+      wheelAccum.current += deltaY;
       clearTimeout(resetTimer);
       resetTimer = setTimeout(() => { wheelAccum.current = 0; }, 200);
-      if (Math.abs(wheelAccum.current) < 60) return;
+      if (Math.abs(wheelAccum.current) < 60) return true;
       const dir = wheelAccum.current > 0 ? 1 : -1;
       wheelAccum.current = 0;
-      const currentIdx = Math.round(scrollEl.scrollTop / scrollEl.clientHeight);
+      const h = scrollEl.clientHeight;
+      const currentIdx = Math.round(scrollEl.scrollTop / h);
       const nextIdx = Math.max(0, Math.min(4, currentIdx + dir));
-      if (nextIdx === currentIdx) return;
+      if (nextIdx === currentIdx) return true;
+      const target = nextIdx * h;
       scrollingRef.current = true;
-      scrollEl.scrollTo({ top: nextIdx * scrollEl.clientHeight, behavior: "smooth" });
-      setTimeout(() => { scrollingRef.current = false; }, 700);
+      gestureConsumedRef.current = true;
+      scrollEl.scrollTo({ top: target, behavior: "smooth" });
+      // Unlock once the scroll has actually arrived (not on a fixed timer), with a 1.5s safety cap
+      const started = now;
+      const waitArrive = () => {
+        const arrived = Math.abs(scrollEl.scrollTop - target) < 2;
+        if (arrived || performance.now() - started > 1500) {
+          scrollingRef.current = false;
+          return;
+        }
+        rafId = requestAnimationFrame(waitArrive);
+      };
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(waitArrive);
+      return true;
+    };
+    wheelStepRef.current = step;
+
+    const onWheel = (e: WheelEvent) => {
+      if (step(e.deltaY)) e.preventDefault();
+    };
+
+    // Keep the page aligned to a section boundary when the viewport is resized
+    const onResize = () => {
+      if (window.innerWidth < 768 || navLockRef.current) return;
+      scrollEl.scrollTo({ top: sectionIdxRef.current * scrollEl.clientHeight });
     };
 
     scrollEl.addEventListener("wheel", onWheel, { passive: false });
-    return () => { scrollEl.removeEventListener("wheel", onWheel); clearTimeout(resetTimer); };
+    window.addEventListener("resize", onResize);
+    return () => {
+      scrollEl.removeEventListener("wheel", onWheel);
+      window.removeEventListener("resize", onResize);
+      clearTimeout(resetTimer);
+      cancelAnimationFrame(rafId);
+      wheelStepRef.current = null;
+    };
   }, [mounted]);
 
   useEffect(() => {
@@ -558,6 +634,7 @@ function ScatteredNav() {
       }
       setOnHero(scrollTop < height * 0.5);
       const sectionIdx = Math.min(Math.round(scrollTop / height), 4);
+      sectionIdxRef.current = sectionIdx;
       const found = Object.keys(SECTION_INDEX).find(k => SECTION_INDEX[k] === sectionIdx);
       setActiveSection(found ?? "home");
     };
@@ -636,9 +713,9 @@ function ScatteredNav() {
     }, 100);
   };
 
+  // Wheel over the fixed nav goes through the same one-section-per-gesture stepping as the page
   const forwardScroll = (e: React.WheelEvent) => {
-    const main = document.querySelector("main") as HTMLElement | null;
-    if (main) main.scrollTop += e.deltaY;
+    wheelStepRef.current?.(e.deltaY);
   };
 
   const hoverTrans = { type: "spring", stiffness: 300, damping: 22 } as const;
@@ -650,6 +727,7 @@ function ScatteredNav() {
         <div
           className="fixed flex flex-col items-center pointer-events-auto"
           style={{ right: 16, top: "50%", transform: "translateY(-50%)", zIndex: 4999, gap: 8 }}
+          onWheel={forwardScroll}
         >
           {(["home", "projects", "skills", "about", "contact"] as const).map((s) => (
             <motion.button
@@ -894,20 +972,37 @@ function MobileNav() {
   useEffect(() => {
     if (!mounted) return;
     const scrollEl = document.querySelector("main") as HTMLElement | null;
+    // On mobile sections are natural height (not h-screen), so use real element positions
     const onScroll = () => {
-      const idx = Math.min(Math.round((scrollEl?.scrollTop ?? 0) / window.innerHeight), 4);
-      const found = Object.keys(SECTION_INDEX).find(k => SECTION_INDEX[k] === idx);
-      setActiveSection(found ?? "home");
+      if (!scrollEl) return;
+      const mainTop = scrollEl.getBoundingClientRect().top;
+      const probe = scrollEl.clientHeight * 0.4;
+      let found = "home";
+      for (const id of SECTION_ORDER) {
+        const el = scrollEl.querySelector(`[data-section="${id}"]`);
+        if (el && el.getBoundingClientRect().top - mainTop <= probe) found = id;
+      }
+      // At the very bottom, the last (often short) section is the active one
+      if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 2) found = "contact";
+      setActiveSection(found);
     };
     onScroll();
     scrollEl?.addEventListener("scroll", onScroll, { passive: true });
-    return () => scrollEl?.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      scrollEl?.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, [mounted]);
 
   const navigateTo = (id: string) => {
     const scrollEl = document.querySelector("main") as HTMLElement | null;
     if (!scrollEl) return;
-    scrollEl.scrollTo({ top: SECTION_INDEX[id] * scrollEl.clientHeight, behavior: "smooth" });
+    const el = scrollEl.querySelector(`[data-section="${id}"]`);
+    const top = el
+      ? scrollEl.scrollTop + el.getBoundingClientRect().top - scrollEl.getBoundingClientRect().top
+      : SECTION_INDEX[id] * scrollEl.clientHeight;
+    scrollEl.scrollTo({ top, behavior: "smooth" });
   };
 
   if (!mounted) return null;

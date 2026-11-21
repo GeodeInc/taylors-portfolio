@@ -11,11 +11,11 @@ export default function Home() {
     <PageLoader>
       <main id="main-content" className="bg-black h-screen overflow-y-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <GeodeBrand />
-        <div className="md:sticky md:top-0 z-[1] md:h-screen md:overflow-hidden"><HeroSection /></div>
-        <div className="md:sticky md:top-0 z-[2] md:h-screen md:overflow-hidden bg-black"><ProjectsSection /></div>
-        <div className="md:sticky md:top-0 z-[3] md:h-screen md:overflow-hidden bg-black"><SkillsSection /></div>
-        <div className="md:sticky md:top-0 z-[4] md:h-screen md:overflow-hidden bg-black"><AboutSection /></div>
-        <div className="md:sticky md:top-0 z-[5] md:h-screen md:overflow-hidden bg-black"><ContactSection /></div>
+        <div data-section="home" className="md:sticky md:top-0 z-[1] md:h-screen md:overflow-hidden"><HeroSection /></div>
+        <div data-section="projects" className="md:sticky md:top-0 z-[2] md:h-screen md:overflow-hidden bg-black"><ProjectsSection /></div>
+        <div data-section="skills" className="md:sticky md:top-0 z-[3] md:h-screen md:overflow-hidden bg-black"><SkillsSection /></div>
+        <div data-section="about" className="md:sticky md:top-0 z-[4] md:h-screen md:overflow-hidden bg-black"><AboutSection /></div>
+        <div data-section="contact" className="md:sticky md:top-0 z-[5] md:h-screen md:overflow-hidden bg-black"><ContactSection /></div>
       </main>
     </PageLoader>
   );
